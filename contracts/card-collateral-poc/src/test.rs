@@ -127,3 +127,35 @@ fn shortfall_invariant_holds_across_cases() {
     assert_eq!(shortfall, lock.settled - lock.locked);
     assert_eq!(shortfall, 20_000_000);
 }
+
+// ---- OZ pausable circuit breaker (composition under test) ----
+
+#[test]
+fn pause_blocks_reserve_but_allows_wind_down() {
+    let (env, c) = setup();
+    let caller = Address::generate(&env);
+
+    // Open an authorization while unpaused.
+    let id1 = aid(&env, 30);
+    c.reserve(&id1, &100_000_000, &200);
+    assert!(!c.paused());
+
+    // Pause: the circuit breaker stops the vault taking on NEW collateral.
+    c.pause(&caller);
+    assert!(c.paused());
+    let id2 = aid(&env, 31);
+    let err = c.try_reserve(&id2, &100_000_000, &200);
+    assert!(err.is_err(), "reserve must be rejected while paused");
+
+    // ...but open authorizations can still be settled and released to wind down.
+    let shortfall = c.settle(&id1, &60_000_000);
+    assert_eq!(shortfall, 0);
+    let returned = c.release(&id1);
+    assert_eq!(returned, 40_000_000);
+
+    // Unpause restores normal operation.
+    c.unpause(&caller);
+    assert!(!c.paused());
+    c.reserve(&id2, &50_000_000, &200);
+    assert_eq!(c.get_lock(&id2).unwrap().locked, 50_000_000);
+}

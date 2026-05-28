@@ -11,17 +11,33 @@
 //! underneath the vault — **never on XLM**. Nothing here offers, promotes, or
 //! implies any interest, dividend, yield, or return on XLM.
 //!
-//! Off the audit/mainnet critical path. The production vault composes
-//! OpenZeppelin's `stellar_accounts::smart_account::SmartAccount`
-//! (`CustomAccountInterface` via `do_check_auth`) with `policies::spending_limit`,
-//! `verifiers::webauthn`/`ed25519`, and `pausable`; this PoC owns the collateral
-//! state machine and the shortfall accounting.
+//! TESTNET PoC — off the audit/mainnet critical path. It composes the OZ
+//! `stellar-contracts` (=0.7.1) building blocks that fit a collateral state
+//! machine without inflating the audit surface:
+//!
+//! - `stellar_contract_utils::pausable` — an audited circuit breaker. `reserve`
+//!   (taking on new collateral) is gated `#[when_not_paused]`; `settle`/`release`
+//!   stay available so an emergency pause can wind down open authorizations.
+//! - `stellar_access::access_control` (+ `stellar_macros::only_admin`) — gates
+//!   every collateral op and the pause controls behind the admin's auth.
+//!
+//! The full account-abstraction stack — `stellar_accounts::smart_account`
+//! (`CustomAccountInterface`/`do_check_auth`), `policies::spending_limit`, and
+//! `verifiers::webauthn`/`ed25519` — is the production-vault target. It is
+//! deliberately NOT wired into this PoC: that machinery is far larger than the
+//! collateral state machine it would wrap, and folding it in here would invert
+//! the "small, tight audit surface" thesis. This module keeps the novel
+//! surface: the reserve/settle/release lifecycle and the shortfall accounting.
 
 #![no_std]
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, Address, BytesN, Env,
+    Symbol, Vec,
 };
+use stellar_access::access_control::{self as access_control, AccessControl};
+use stellar_contract_utils::pausable::{self as pausable, Pausable};
+use stellar_macros::{only_admin, when_not_paused};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -49,7 +65,6 @@ pub struct CardLock {
 #[contracttype]
 #[derive(Clone)]
 enum DataKey {
-    Admin,
     Lock(BytesN<32>),
 }
 
@@ -95,19 +110,24 @@ pub struct CardCollateral;
 
 #[contractimpl]
 impl CardCollateral {
+    /// Initialize with the admin (the issuer adapter / business server) that may
+    /// reserve, settle, release, and pause. Admin gating is delegated to OZ
+    /// access control; the contract starts unpaused.
     pub fn __constructor(env: Env, admin: Address) {
-        env.storage().instance().set(&DataKey::Admin, &admin);
+        access_control::set_admin(&env, &admin);
     }
 
-    /// Reserve collateral at card authorization. Admin-authenticated
-    /// (the issuer adapter, on an auth webhook).
+    /// Reserve collateral at card authorization. Admin-gated via OZ access
+    /// control (the issuer adapter, on an auth webhook). Blocked while paused —
+    /// the circuit breaker stops the vault from taking on new collateral.
+    #[only_admin]
+    #[when_not_paused]
     pub fn reserve(
         env: Env,
         auth_id: BytesN<32>,
         amount: i128,
         ttl_ledgers: u32,
     ) -> Result<(), Error> {
-        Self::admin(&env)?.require_auth();
         if amount <= 0 || ttl_ledgers == 0 {
             return Err(Error::InvalidAmount);
         }
@@ -142,8 +162,10 @@ impl CardCollateral {
     /// clearing was fully covered by locked collateral). A positive return means
     /// settlement exceeded locked collateral — the auth/clearing race — and a
     /// `shortfall` event is emitted for off-chain top-up reconciliation.
+    /// Admin-gated via OZ access control; stays available while paused so open
+    /// authorizations can be wound down.
+    #[only_admin]
     pub fn settle(env: Env, auth_id: BytesN<32>, final_amount: i128) -> Result<i128, Error> {
-        Self::admin(&env)?.require_auth();
         if final_amount < 0 {
             return Err(Error::InvalidAmount);
         }
@@ -179,8 +201,10 @@ impl CardCollateral {
 
     /// Release the unused remainder (`locked − settled`, floored at 0) and close
     /// the authorization. Returns the amount returned to the cardholder.
+    /// Admin-gated via OZ access control; stays available while paused so open
+    /// authorizations can be wound down.
+    #[only_admin]
     pub fn release(env: Env, auth_id: BytesN<32>) -> Result<i128, Error> {
-        Self::admin(&env)?.require_auth();
         let key = DataKey::Lock(auth_id.clone());
         let lock: CardLock = env
             .storage()
@@ -201,14 +225,31 @@ impl CardCollateral {
     pub fn get_lock(env: Env, auth_id: BytesN<32>) -> Option<CardLock> {
         env.storage().persistent().get(&DataKey::Lock(auth_id))
     }
+}
 
-    fn admin(env: &Env) -> Result<Address, Error> {
-        env.storage()
-            .instance()
-            .get(&DataKey::Admin)
-            .ok_or(Error::NotInitialized)
+// OZ audited pausable circuit breaker. The pause/unpause controls are gated by
+// the contract admin via OZ access control; `paused()` is a public query.
+#[contractimpl]
+impl Pausable for CardCollateral {
+    fn paused(e: &Env) -> bool {
+        pausable::paused(e)
+    }
+
+    #[only_admin]
+    fn pause(e: &Env, _caller: Address) {
+        pausable::pause(e);
+    }
+
+    #[only_admin]
+    fn unpause(e: &Env, _caller: Address) {
+        pausable::unpause(e);
     }
 }
+
+// Expose the audited OZ AccessControl interface (grant/revoke roles, admin
+// transfer, queries) so role administration is on-chain and standard.
+#[contractimpl(contracttrait)]
+impl AccessControl for CardCollateral {}
 
 #[cfg(test)]
 mod test;
