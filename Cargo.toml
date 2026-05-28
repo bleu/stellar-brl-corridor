@@ -1,5 +1,7 @@
 # Bleu — Stellar BRL/PIX Corridor — Cargo workspace
-# T0 skeleton. Real contract logic lands in T1.
+# Three Soroban contracts (fx-rate-lock, partner-attribution, card-collateral-poc),
+# implemented + unit-tested. OZ stellar-contracts composition lands at the
+# audit/mainnet-hardening pass.
 
 [workspace]
 resolver = "2"
@@ -15,7 +17,7 @@ edition = "2021"
 license = "MIT"
 authors = ["Bleu LTDA <hello@bleu.builders>"]
 repository = "https://github.com/bleu/stellar-brl-corridor"
-rust-version = "1.74"
+rust-version = "1.84"
 
 [workspace.dependencies]
 soroban-sdk = "26"
