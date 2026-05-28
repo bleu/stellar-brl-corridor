@@ -19,7 +19,7 @@ Which Stellar Ecosystem Proposals and Core Advancement Proposals Bleu **consumes
 | **CAP-46-05** | Static footprint | Predictable fee quoting — all read/write entries declared before execution. |
 | **CAP-46-06** | Deterministic asset SAC | `CONTRACT_ID_PREIMAGE_FROM_ASSET` for USDC SAC composition; no re-issued balances. |
 | **CAP-46-12** | Storage types | `StorageType::Temporary` for quotes (die on TTL, no stale-quote risk); `Persistent` for partner configs and vault locks. |
-| **OpenZeppelin Stellar Contracts `=0.7.1`** (MIT, audited, SDF collaboration) | Audited building blocks | **Covers**: `sac_admin_wrapper`, `SmartAccount` + `do_check_auth`, `policies::spending_limit`, `verifiers::webauthn`/`ed25519`, `pausable`, `stellar_access::access_control`, `stellar_fee_abstraction::validate_expiration_ledger`. **Does NOT cover**: `partner_transfer` event, SEP-38 quote-hash lifecycle, shortfall invariant — all Bleu-specific. |
+| **OpenZeppelin Stellar Contracts `=0.7.1`** (MIT, audited, SDF collaboration) | Audited building blocks (mainnet-hardening target) | **Planned composition** at the audit/mainnet pass — not yet wired into the contracts in this repo, which implement the Bleu-specific logic standalone on `soroban-sdk`. Target modules: `sac_admin_wrapper`, `SmartAccount` + `do_check_auth`, `policies::spending_limit`, `verifiers::webauthn`/`ed25519`, `pausable`, `stellar_access::access_control`, `stellar_fee_abstraction::validate_expiration_ledger`. **Out of OZ scope (always Bleu-specific)**: `partner_transfer` event, SEP-38 quote-hash lifecycle, shortfall invariant. |
 
 ## Upstream contributions (filed during the grant)
 

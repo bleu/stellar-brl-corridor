@@ -32,4 +32,4 @@ In production this is a thin layer over OpenZeppelin's audited `stellar_tokens::
 
 ## Tests
 
-`cargo test -p bleu-partner-attribution` — total tracking, cap enforcement (single + cumulative), update recompute, fee computation, unknown-partner, remove.
+`cargo test -p bleu-partner-attribution` — 9 unit tests: total tracking, cap enforcement (single + cumulative), update recompute, free-room-then-add-third-partner, fee computation, non-positive amount rejection, unknown-partner, remove.

@@ -16,8 +16,9 @@ reports. We aim to acknowledge within two business days.
 ## Audit status
 
 - Pre-mainnet: external review via SDF's Soroban Audit Bank (grant Tranche-3).
-- Build-time dependency: OpenZeppelin `stellar-contracts` (MIT, audited by
-  OpenZeppelin's security team; formal verification by Certora).
+- Planned build-time dependency (mainnet-hardening pass, not yet wired in):
+  OpenZeppelin `stellar-contracts =0.7.1` (MIT, audited by OpenZeppelin's
+  security team; formal verification by Certora).
 
 ## Build provenance
 

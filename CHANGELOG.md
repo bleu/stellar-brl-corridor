@@ -10,13 +10,13 @@ workspace.
 - **FX Rate-Lock** contract — SEP-38 firm-quote `lock_quote` / `consume_quote`
   with Temporary-storage expiry (+grace), an on-chain SEP-38 price-invariant
   check, replay/double-settle guards, and `quote_locked` / `quote_use`
-  `#[contractevent]`s. 6 unit tests.
+  `#[contractevent]`s. 9 unit tests.
 - **Partner Attribution** contract — on-chain partner config with the
   `Σ partner.bps ≤ 10_000` invariant enforced on every write, fee computation,
-  and `partner_set` / `partner_removed` / `partner_transfer` events. 7 unit tests.
+  and `partner_set` / `partner_removed` / `partner_transfer` events. 9 unit tests.
 - **Card-Collateral testnet PoC** — `reserve` / `settle` / `release` lifecycle
   with auth/clearing shortfall accounting. USDC collateral only; never XLM.
-  6 unit tests.
+  8 unit tests.
 - BR-configured Anchor Platform compose stack + SEP-1 `stellar.toml` template.
 - TypeScript + Python SDK skeletons; Soroban event-indexer stub.
 

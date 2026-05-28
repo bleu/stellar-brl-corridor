@@ -1,14 +1,14 @@
 # Bleu — Stellar BRL/PIX Corridor
 
 > Operationalizing **Anchor Platform** + **SDP** + Soroban for Brazil's BRL/PIX corridor on Stellar.
-> MIT-licensed. Three Soroban contracts implemented + tested (19 unit tests, CI green); Anchor Platform config, SDK, indexer, and dashboard scaffolds in progress. Pre-mainnet.
+> MIT-licensed. Three Soroban contracts implemented + tested (26 unit tests, CI green); Anchor Platform config, SDK, indexer, and dashboard scaffolds in progress. Pre-mainnet.
 
 [![CI](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml/badge.svg)](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## What this is
 
-An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus **two** Soroban primitives (mainnet, audited) and a **testnet proof-of-concept** card-collateral smart account. The corridor wraps SEP-31 B2B receive flows with PIX semantics, surfaces BCB-compliant IOF disclosure inside SEP-38 firm quotes, and turns B2B2B distribution economics into on-chain `partner_transfer` events.
+An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus **two** mainnet-bound Soroban primitives (audit scheduled via the SDF Soroban Audit Bank, pre-mainnet) and a **testnet proof-of-concept** card-collateral smart account. The corridor wraps SEP-31 B2B receive flows with PIX semantics, surfaces BCB-compliant IOF disclosure inside SEP-38 firm quotes, and turns B2B2B distribution economics into on-chain `partner_transfer` events.
 
 - **Brazil's PIX rail moves ~US$550B/month, and no BACEN-licensed operator runs a production SEP-31 BR anchor today.** Bleu closes that gap with a partner-anchor approach (10-candidate BACEN FX-licensed pool; offshore Stellar anchor as "or equivalent" fallback).
 - **The contract logic is portable; the operating corridor is not.** Bleu defends Stellar's LatAm position by making the corridor integration reusable.

@@ -32,4 +32,4 @@ The production vault composes OpenZeppelin's `stellar_accounts::smart_account::S
 
 ## Tests
 
-`cargo test -p bleu-card-collateral-poc` — reserve/settle/release, shortfall on over-clearing, cumulative settles, double-reserve rejection, unknown-auth, input validation.
+`cargo test -p bleu-card-collateral-poc` — 8 unit tests: reserve/settle/release, shortfall on over-clearing, shortfall invariant across covered + breached cases, cumulative settles, double-reserve rejection, unknown-auth, input validation (non-positive amount, zero TTL, negative final amount).

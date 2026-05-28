@@ -4,7 +4,7 @@ This repo is the engineering output of Bleu's [Stellar Community Fund #44](https
 
 - **Ask:** US$ 110,000 over five months, four tranches (10 / 20 / 30 / 40).
 - **Integration List items:** Stellar Anchor Platform, Stellar Disbursement Platform.
-- **Ships:** a BR-configured Anchor Platform deployment + two mainnet-audited Soroban primitives (SEP-38 rate-lock, partner attribution) + a card-collateral smart-account testnet PoC + public TS + Python SDKs.
+- **Ships:** a BR-configured Anchor Platform deployment + two mainnet-bound Soroban primitives (SEP-38 rate-lock, partner attribution; audited via the SDF Soroban Audit Bank before mainnet) + a card-collateral smart-account testnet PoC + public TS + Python SDKs.
 - **Honest moat:** the contract logic is portable; the operating corridor — a licensed BR anchor on PIX, a BR-configured Anchor Platform, BCB compliance hooks, an in-market BR distribution network — is not.
 
 ## Tranches
@@ -22,7 +22,7 @@ Tranche releases are gated only on deliverables in Bleu's control. The live BR-l
 
 Core build: **two engineers at full allocation** (Pedro Yves Fracari, Smart Contract Lead; Luiz Gustavo Abou Hatem de Liz, Stellar workstream) ≈ ~43 engineer-weeks, plus fractional product / design / GTM / commercial.
 
-Smart-contract delivery record: CoW Protocol (30+ months continuous), Balancer, Morpho, Silo Finance, Perk (3+ years). The Soroban here in this repo (3 contracts, 19 tests, CI green) is the Stellar receipt; production fintech (PIX, USDC yield, B2B2B distribution) runs under a private commercial engagement, with a reference letter available to the SCF panel.
+Smart-contract delivery record: CoW Protocol (30+ months continuous), Balancer, Morpho, Silo Finance, Perk (3+ years). The Soroban here in this repo (3 contracts, 26 tests, CI green) is the Stellar receipt; production fintech (PIX, USDC yield, B2B2B distribution) runs under a private commercial engagement, with a reference letter available to the SCF panel.
 
 ## Get involved
 

@@ -35,4 +35,4 @@ In production the expiry lifecycle composes OpenZeppelin's audited `stellar_fee_
 
 ## Tests
 
-`cargo test -p bleu-fx-rate-lock` — lock/consume happy path, double-consume rejection, expiry, price-invariant trap, input validation, unknown-quote.
+`cargo test -p bleu-fx-rate-lock` — 9 unit tests: lock/consume happy path, zero-fee quote, double-consume rejection, expiry (consume + grace-window readability), price-invariant trap, input validation (non-positive sell/buy/price, negative IOF, zero TTL), unknown-quote.
