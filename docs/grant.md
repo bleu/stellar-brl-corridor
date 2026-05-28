@@ -22,7 +22,7 @@ Tranche releases are gated only on deliverables in Bleu's control. The live BR-l
 
 Core build: **two engineers at full allocation** (Pedro Yves Fracari, Smart Contract Lead; Luiz Gustavo Abou Hatem de Liz, Stellar workstream) ≈ ~43 engineer-weeks, plus fractional product / design / GTM / commercial.
 
-Smart-contract delivery record: CoW Protocol (30+ months continuous), Balancer, Morpho, Silo Finance, Perk (3+ years). Currently shipping production Soroban under a confidential commercial engagement.
+Smart-contract delivery record: CoW Protocol (30+ months continuous), Balancer, Morpho, Silo Finance, Perk (3+ years). The Soroban here in this repo (3 contracts, 19 tests, CI green) is the Stellar receipt; production fintech (PIX, USDC yield, B2B2B distribution) runs under a private commercial engagement, with a reference letter available to the SCF panel.
 
 ## Get involved
 
