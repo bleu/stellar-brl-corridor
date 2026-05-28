@@ -1,0 +1,33 @@
+# Bleu — Stellar BRL/PIX Corridor — Cargo workspace
+# T0 skeleton. Real contract logic lands in T1.
+
+[workspace]
+resolver = "2"
+members = [
+    "contracts/fx-rate-lock",
+    "contracts/partner-attribution",
+    "contracts/card-collateral-poc",
+]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+authors = ["Bleu LTDA <hello@bleu.builders>"]
+repository = "https://github.com/bleu/stellar-brl-corridor"
+rust-version = "1.74"
+
+[workspace.dependencies]
+soroban-sdk = "26"
+
+# Soroban-recommended release profile for on-chain Wasm.
+# https://developers.stellar.org/docs/build/smart-contracts/getting-started/hello-world
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true

@@ -1,0 +1,54 @@
+title: Bleu · SEP-31 B2B PIX Receive with SEP-38 Firm Quote (C4 L3 Sequence) {
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+shape: sequence_diagram
+
+fintech: Fintech Integrator
+api: Bleu API Gateway
+ap_biz: AP Business Server
+ap_sep: AP SEP Server
+rfq: SEP-38 Rate-Lock\n(Soroban)
+anchor: BR Anchor\n(BACEN FX-licensed)
+sender: Sender Wallet
+observer: AP Stellar Observer
+usdc: USDC SAC\n(Stellar Mainnet)
+pix: PIX (BCB SPI)
+
+# 1. Firm quote
+fintech -> api: "1. POST /quote (SEP-38)\nsell=USDC, buy=iso4217:BRL, amount=100"
+api -> ap_sep: "2. SEP-38 quote req"
+ap_sep -> anchor: "3. upstream quote"
+anchor -> ap_sep: "4. price + fee.details[]\n(incl. IOF disclosure)"
+ap_sep -> rfq: "5. lock_quote(id,\nexpires_at_ledger = now + 180)"
+rfq -> ap_sep: "6. locked — emit\n(quote_locked, id, anchor)"
+ap_sep -> api: "7. quote {id, expires_at,\ntotal_price, fee.details[]}"
+api -> fintech: "8. 200 OK — quote_id\n+ IOF disclosure"
+
+# 2. Create transaction
+fintech -> api: "9. POST /transactions (SEP-31)\nquote_id, sender/receiver ids,\nfunding_method=PIX"
+api -> ap_sep: "10. SEP-31 create"
+ap_sep -> ap_biz: "11. JSON-RPC\nrequest_offchain_funds"
+ap_biz -> api: "12. stellar_account + memo\n+ amount USDC"
+api -> fintech: "13. transaction_id +\ndeposit info"
+
+# 3. On-chain payment
+fintech -> sender: "14. instruct USDC pay\n+ stellar_memo"
+sender -> usdc: "15. SAC transfer(USDC)"
+usdc -> observer: "16. payment event"
+observer -> ap_biz: "17. notify_onchain_funds_received"
+ap_biz -> api: "18. status=pending_receiver"
+
+# 4. Anchor PIX payout
+ap_biz -> anchor: "19. trigger PIX payout\n(quote_id, BRL amount)"
+anchor -> pix: "20. BRL via SPI"
+pix -> anchor: "21. PIX confirmed"
+anchor -> ap_biz: "22. notify_offchain_funds_sent"
+
+# 5. Consume quote + event
+ap_biz -> rfq: "23. consume_quote(quote_id, tx_id)"
+rfq -> ap_biz: "24. emit (quote_use, id,\ncontext=sep31, sep31_tx_id)\n{price, total_price, fee_iof}"
+ap_biz -> api: "25. status=completed"
+api -> fintech: "26. webhook: completed"

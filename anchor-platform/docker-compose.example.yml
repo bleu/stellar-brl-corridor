@@ -1,0 +1,40 @@
+# Bleu — Anchor Platform local stack (testnet)
+# Copy `env.example` -> `.env` and fill values before `docker compose up`.
+
+services:
+  anchor-platform:
+    # TODO: pin to a specific stable release before T1 (e.g., stellar/anchor-platform:3.0.0).
+    image: stellar/anchor-platform:latest
+    container_name: bleu-ap
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # SEP server
+      - "8081:8081"   # platform API
+    env_file:
+      - .env
+    volumes:
+      - ./config:/home/anchorplatform/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    container_name: bleu-ap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor
+    ports:
+      - "5432:5432"
+    volumes:
+      - bleu-ap-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bleu-ap-postgres:

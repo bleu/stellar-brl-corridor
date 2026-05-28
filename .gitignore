@@ -1,0 +1,42 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# Node
+node_modules/
+dist/
+build/
+.npm
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Local env / secrets
+.env
+.env.local
+*.local
+secrets/
+
+# Logs / artifacts
+*.log
+/dist
+/coverage
+.lcov.info
+
+# Stellar build artifacts (locally rebuildable)
+/wasm
+
+# Soroban test snapshots — auto-generated each `cargo test`; commit once contracts are real (post-T0)
+**/test_snapshots/

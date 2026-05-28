@@ -1,0 +1,18 @@
+[package]
+name = "bleu-partner-attribution"
+description = "SEP-41-compatible SAC wrapper over USDC. Emits `partner_transfer` events and enforces Σ partner.bps ≤ 10_000. Bleu BRL/PIX corridor on Stellar."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

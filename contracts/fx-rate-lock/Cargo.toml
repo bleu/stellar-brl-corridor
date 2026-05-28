@@ -1,0 +1,18 @@
+[package]
+name = "bleu-fx-rate-lock"
+description = "SEP-38 firm-quote rate-lock contract — locks quote rows in Temporary storage so they die at TTL=0. Bleu BRL/PIX corridor on Stellar."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

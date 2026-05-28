@@ -1,0 +1,272 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+title: Bleu · Containers (C4 L2) {
+  near: top-center
+  style.font-size: 32
+  style.bold: true
+}
+
+classes: {
+  actor: {
+    shape: person
+    style.fill: "#f1f5f9"
+  }
+  frontend: {
+    style.fill: "#60a5fa"
+    style.font-color: white
+    style.border-radius: 4
+  }
+  service: {
+    style.fill: "#6366f1"
+    style.font-color: white
+    style.border-radius: 4
+  }
+  soroban: {
+    style.fill: "#16a34a"
+    style.font-color: white
+    style.border-radius: 4
+  }
+  soroban-poc: {
+    style.fill: "#86efac"
+    style.font-color: "#14532d"
+    style.border-radius: 4
+    style.stroke-dash: 3
+  }
+  datastore: {
+    shape: cylinder
+    style.fill: "#d97706"
+    style.font-color: white
+  }
+  external: {
+    style.fill: "#e2e8f0"
+  }
+  build-dep: {
+    style.fill: "#fef3c7"
+  }
+}
+
+# -- Actors --
+users_enterprise: Enterprise / Fintech / FX Op {class: actor}
+users_channel: Channel Partner {class: actor}
+users_admin: Bleu Admin {class: actor}
+
+# -- Bleu Platform boundary --
+bleu: Bleu Platform {
+  style.stroke: "#1e40af"
+  style.stroke-dash: 4
+  style.fill: "#eff6ff"
+
+  public: Public VPC {
+    style.fill: "#dbeafe"
+
+    gateway: |md
+      **API Gateway**
+      Kong · TLS · rate-limit
+    | {class: frontend}
+
+    dashboard: |md
+      **Enterprise Dashboard**
+      React + Vite
+    | {class: frontend}
+
+    console: |md
+      **Partner Console**
+      React + Vite
+    | {class: frontend}
+  }
+
+  private: Private VPC {
+    style.fill: "#e0e7ff"
+
+    orch: |md
+      **Orchestrator Service**
+      Node.js + TypeScript
+      Prepare → Sign → Submit
+      fee-bump ×10 retries
+    | {class: service}
+
+    ap_sep: |md
+      **Anchor Platform — SEP Server**
+      Java · SDF reference
+      SEP-10/12/24/31/38
+    | {class: service}
+
+    ap_biz: |md
+      **AP Business Server**
+      Node.js + TypeScript
+      SEP-31 JSON-RPC actions
+      IOF in `fee.details[]`
+      + batched payout glue
+      (`Vec<PayoutEntry>`, fee-bump ×10)
+    | {class: service}
+
+    kyc_proxy: |md
+      **KYC / KYB Proxy**
+      SEP-12 shim to
+      Idwall · Unico · Truora ·
+      Onfido · Sumsub
+    | {class: service}
+
+    rpc: |md
+      **Stellar RPC + Horizon**
+      simulateTx · sendTx · getEvents
+      CAP-33 sponsor-sandwich
+    | {class: service}
+
+    indexer: |md
+      **Soroban Event Indexer**
+      Postgres sink · OSS template
+      bridges RPC 24h → long-term
+    | {class: service}
+
+    card_adapter: |md
+      **Card Issuer Adapter**
+      Node.js + TypeScript
+      *(testnet PoC)*
+      ingests auth · capture · refund
+      webhooks → vault.reserve /
+      settle / release invocations
+      (Gnosis Pay hybrid pattern,
+      offchain by necessity)
+    | {class: service}
+  }
+
+  secure: Secure VPC {
+    style.fill: "#fef3c7"
+
+    rds: |md
+      **Postgres (RDS)**
+      quote state · partner config
+      event log
+    | {class: datastore}
+
+    redis: |md
+      **Redis**
+      quote cache · rate-limit
+      inflight tx dedup
+    | {class: datastore}
+
+    s3: |md
+      **S3**
+      KYC binaries · artifacts
+      audit logs
+    | {class: datastore}
+  }
+}
+
+# -- Soroban contracts --
+sc: Soroban Contracts (attr + rfq on Mainnet, audited · vault = testnet PoC) {
+  style.stroke: "#15803d"
+  style.stroke-dash: 4
+  style.fill: "#f0fdf4"
+
+  attr: |md
+    **Partner-Attribution Wrapper**
+    *Mainnet · audited*
+    composes OZ `stellar_tokens::fungible::sac_admin_wrapper`
+    + `stellar_access::access_control::AccessControl`
+    + `partner_transfer` event
+    + invariant `Σ bps ≤ 10_000`
+  | {class: soroban}
+
+  rfq: |md
+    **SEP-38 Rate-Lock**
+    *Mainnet · audited*
+    custom Soroban
+    Temporary storage (CAP-46-12)
+    reuses OZ `stellar_fee_abstraction::validate_expiration_ledger`
+    `(quote_use, quote_id, context, sep31_tx_id)` events
+  | {class: soroban}
+
+  vault: |md
+    **Card-Collateral Vault**
+    **(TESTNET PoC — off critical path)**
+    composes OZ `stellar_accounts::smart_account::SmartAccount`
+    + `policies::spending_limit`
+    + `verifiers::webauthn` / `ed25519`
+    + `stellar_contract_utils::pausable`
+    USDC yield only (never XLM)
+  | {class: soroban-poc}
+
+  usdc: |md
+    **USDC SAC**
+    Circle · CAP-46-06
+    AUTH_CLAWBACK_ENABLED
+  | {class: external}
+}
+
+# -- Off-platform externals --
+anchor: |md
+  **BACEN FX-licensed BR anchor**
+  (10-candidate pool · offshore fallback)
+  upstream SEP-31 + SEP-38
+  PIX BRL rail
+| {class: external}
+
+fb: |md
+  **Fireblocks** (mainnet) /
+  **self-custody** (testnet)
+  external signer
+| {class: external}
+
+card_processor: |md
+  **Card Processor / Issuer / BIN**
+  Visa · Mastercard rails
+  Monavate-pattern EMI
+  (offchain; not on Stellar)
+  *(card PoC only)*
+| {class: external}
+
+oz_dep: |md
+  **OpenZeppelin Stellar Contracts**
+  stellar-contracts =0.7.1 (MIT)
+  build-time dependency
+| {class: build-dep}
+
+# -- Actor flows --
+users_enterprise -> bleu.public.dashboard: HTTPS
+users_enterprise -> bleu.public.gateway: REST
+users_channel -> bleu.public.console: HTTPS
+users_admin -> bleu.public.dashboard
+
+# -- Public → Private --
+bleu.public.gateway -> bleu.private.orch
+bleu.public.gateway -> bleu.private.ap_sep
+
+# -- Private internal --
+bleu.private.ap_sep -> bleu.private.ap_biz: "Platform API\nJWT-signed"
+bleu.private.ap_biz -> bleu.private.kyc_proxy
+bleu.private.orch -> bleu.private.rpc
+bleu.private.indexer -> bleu.private.rpc: "getEvents paginated"
+
+# -- Private → Secure --
+bleu.private.orch -> bleu.secure.rds
+bleu.private.orch -> bleu.secure.redis
+bleu.private.ap_biz -> bleu.secure.rds
+bleu.private.kyc_proxy -> bleu.secure.s3
+bleu.private.indexer -> bleu.secure.rds: "events sink"
+
+# -- Platform → Chain --
+bleu.private.rpc -> sc.attr
+bleu.private.rpc -> sc.rfq
+bleu.private.rpc -> sc.vault: "testnet PoC" {style.stroke-dash: 3}
+
+# -- Contract composition --
+sc.attr -> sc.usdc: "transfer_from (SEP-41)"
+sc.vault -> sc.usdc: "transfer_from (allowance, PoC)" {style.stroke-dash: 3}
+
+# -- External --
+bleu.private.ap_sep -> anchor: "upstream SEP-31/38"
+bleu.private.orch -> fb: "external signer"
+anchor -> sc.usdc: "BRL ↔ USDC settlement" {style.stroke-dash: 4}
+
+# -- Card hybrid edges (testnet PoC) --
+card_processor -> bleu.private.card_adapter: "auth · capture · refund\nwebhooks (HTTPS)"
+bleu.private.card_adapter -> bleu.private.rpc: "vault.reserve /\nvault.settle /\nvault.release"
+
+# -- Build-time dependency --
+oz_dep -> sc: "build-time composition\n(not a runtime call)" {style.stroke-dash: 4}

@@ -1,0 +1,35 @@
+# Bleu BR Anchor Platform — SEP-1 stellar.toml template
+# Fill the [NEEDS] values, rename to `stellar.toml`, publish at
+#   https://<your-anchor-domain>/.well-known/stellar.toml
+
+VERSION = "0.0.1"
+NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
+ACCOUNTS = ["[NEEDS: anchor signing/account address]"]
+SIGNING_KEY = "[NEEDS: anchor SEP-10 signing key]"
+
+TRANSFER_SERVER_SEP0024 = "https://[NEEDS:your-anchor-domain]/sep24"
+DIRECT_PAYMENT_SERVER  = "https://[NEEDS:your-anchor-domain]/sep31"
+ANCHOR_QUOTE_SERVER    = "https://[NEEDS:your-anchor-domain]/sep38"
+WEB_AUTH_ENDPOINT      = "https://[NEEDS:your-anchor-domain]/auth"
+KYC_SERVER             = "https://[NEEDS:your-anchor-domain]/sep12"
+
+[[CURRENCIES]]
+code = "USDC"
+issuer = "[NEEDS: USDC issuer — Circle's testnet issuer for testnet, or the mainnet Circle issuer for mainnet]"
+display_decimals = 7
+name = "USD Coin"
+desc = "Circle-issued USDC, native on Stellar."
+
+[[CURRENCIES]]
+code = "BRL"
+issuer = "[NEEDS: anchor's regulated BRL issuer]"
+display_decimals = 7
+name = "Brazilian Real"
+desc = "Off-chain BRL settled via PIX through the anchor."
+
+[DOCUMENTATION]
+ORG_NAME = "Bleu LTDA"
+ORG_URL = "https://bleu.builders"
+ORG_DESCRIPTION = "BRL/PIX corridor on Stellar — open-source, MIT."
+ORG_TWITTER = "bleubuilders"
+ORG_OFFICIAL_EMAIL = "hello@bleu.builders"

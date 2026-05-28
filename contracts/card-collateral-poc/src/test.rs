@@ -1,0 +1,89 @@
+#![cfg(test)]
+use super::*;
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
+
+fn setup() -> (Env, CardCollateralClient<'static>) {
+    let env = Env::default();
+    env.mock_all_auths();
+    let admin = Address::generate(&env);
+    let id = env.register(CardCollateral, (admin,));
+    (env.clone(), CardCollateralClient::new(&env, &id))
+}
+
+fn aid(env: &Env, b: u8) -> BytesN<32> {
+    BytesN::from_array(env, &[b; 32])
+}
+
+#[test]
+fn reserve_settle_partial_then_release_returns_remainder() {
+    let (env, c) = setup();
+    let id = aid(&env, 1);
+    c.reserve(&id, &100_000_000, &200);
+
+    let shortfall = c.settle(&id, &60_000_000);
+    assert_eq!(shortfall, 0);
+
+    let returned = c.release(&id);
+    assert_eq!(returned, 40_000_000); // locked 100 - settled 60
+    assert!(c.get_lock(&id).is_none());
+}
+
+#[test]
+fn settlement_exceeding_locked_flags_shortfall() {
+    let (env, c) = setup();
+    let id = aid(&env, 2);
+    c.reserve(&id, &100_000_000, &200);
+
+    // Auth/clearing race: clearing comes in above the locked amount.
+    let shortfall = c.settle(&id, &130_000_000);
+    assert_eq!(shortfall, 30_000_000);
+
+    // Nothing left to return.
+    let returned = c.release(&id);
+    assert_eq!(returned, 0);
+}
+
+#[test]
+fn cumulative_settles_accumulate() {
+    let (env, c) = setup();
+    let id = aid(&env, 3);
+    c.reserve(&id, &100_000_000, &200);
+    assert_eq!(c.settle(&id, &40_000_000), 0);
+    assert_eq!(c.settle(&id, &40_000_000), 0);
+    let lock = c.get_lock(&id).unwrap();
+    assert_eq!(lock.settled, 80_000_000);
+    assert_eq!(c.release(&id), 20_000_000);
+}
+
+#[test]
+fn double_reserve_same_auth_rejected() {
+    let (env, c) = setup();
+    let id = aid(&env, 4);
+    c.reserve(&id, &100, &200);
+    let err = c.try_reserve(&id, &100, &200).err().unwrap().unwrap();
+    assert_eq!(err, Error::AuthAlreadyExists);
+}
+
+#[test]
+fn settle_or_release_unknown_auth_fails() {
+    let (env, c) = setup();
+    let id = aid(&env, 9);
+    assert_eq!(
+        c.try_settle(&id, &10).err().unwrap().unwrap(),
+        Error::AuthNotFound
+    );
+    assert_eq!(
+        c.try_release(&id).err().unwrap().unwrap(),
+        Error::AuthNotFound
+    );
+}
+
+#[test]
+fn rejects_nonpositive_reserve() {
+    let (env, c) = setup();
+    let id = aid(&env, 5);
+    assert_eq!(
+        c.try_reserve(&id, &0, &200).err().unwrap().unwrap(),
+        Error::InvalidAmount
+    );
+}

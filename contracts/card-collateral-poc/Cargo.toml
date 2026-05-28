@@ -1,0 +1,18 @@
+[package]
+name = "bleu-card-collateral-poc"
+description = "Card-collateral smart account proof-of-concept (TESTNET ONLY). Demonstrates Stellar-native USDC collateral that can keep earning while a policy releases only the spent slice at card authorization. Never offers, promotes, or implies yield on XLM."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

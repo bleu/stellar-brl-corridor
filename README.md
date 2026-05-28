@@ -1,0 +1,118 @@
+# Bleu — Stellar BRL/PIX Corridor
+
+> Operationalizing **Anchor Platform** + **SDP** + Soroban for Brazil's BRL/PIX corridor on Stellar.
+> MIT-licensed. Production engineering studio. Tranche-0 skeleton — currently building.
+
+[![CI](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml/badge.svg)](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+## What this is
+
+An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus **two** Soroban primitives (mainnet, audited) and a **testnet proof-of-concept** card-collateral smart account. The corridor wraps SEP-31 B2B receive flows with PIX semantics, surfaces BCB-compliant IOF disclosure inside SEP-38 firm quotes, and turns B2B2B distribution economics into on-chain `partner_transfer` events.
+
+- **Brazil's PIX rail moves ~US$550B/month, and no BACEN-licensed operator runs a production SEP-31 BR anchor today.** Bleu closes that gap with a partner-anchor approach (10-candidate BACEN FX-licensed pool; offshore Stellar anchor as "or equivalent" fallback).
+- **The contract logic is portable; the operating corridor is not.** Bleu defends Stellar's LatAm position by making the corridor integration reusable.
+
+Built under [SCF #44](https://communityfund.stellar.org/) (Build Award, Integration track).
+
+## Architecture
+
+See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthrough. Quick view:
+
+| Level | Diagram |
+| --- | --- |
+| L1 — System Context | [![L1](docs/architecture/arch-l1.svg)](docs/architecture/arch-l1.svg) |
+| L2 — Containers | [![L2](docs/architecture/arch-l2.svg)](docs/architecture/arch-l2.svg) |
+| L3 — SEP-31 + SEP-38 + IOF flow | [![L3 SEP-31](docs/architecture/arch-l3-sep31-flow.svg)](docs/architecture/arch-l3-sep31-flow.svg) |
+| L3 — CAP-33 sponsor-sandwich onboarding | [![L3 onboarding](docs/architecture/arch-l3-onboarding.svg)](docs/architecture/arch-l3-onboarding.svg) |
+| L3 — Card-collateral authorization (testnet PoC) | [![L3 card](docs/architecture/arch-l3-card-auth.svg)](docs/architecture/arch-l3-card-auth.svg) |
+
+## What's in this repo
+
+| Path | Component | Status |
+| --- | --- | --- |
+| [`contracts/fx-rate-lock/`](contracts/fx-rate-lock) | **SEP-38 Rate-Lock** — locks firm quotes in Temporary storage (CAP-46-12); dies at TTL=0 | T0 skeleton → mainnet, audited |
+| [`contracts/partner-attribution/`](contracts/partner-attribution) | **Partner-Attribution Wrapper** — SEP-41 SAC wrapper over USDC; `partner_transfer` event; `Σ partner.bps ≤ 10_000` invariant | T0 skeleton → mainnet, audited |
+| [`contracts/card-collateral-poc/`](contracts/card-collateral-poc) | **Card-Collateral Smart Account** — Custom Account, USDC-only yield (never XLM) | T0 skeleton → **testnet PoC only** |
+| [`anchor-platform/`](anchor-platform) | BR-configured Anchor Platform deployment — SEP-10/12/24/31/38, IOF in `fee.details[]`, payout-orchestration glue in the AP business server | T0 stubs → testnet vs sandbox anchor |
+| [`sdk/typescript/`](sdk/typescript) · [`sdk/python/`](sdk/python) | Public SDKs (generated from Soroban contract specs via `stellar contract bindings`) | T0 skeleton → T3 published to npm + PyPI |
+| [`indexer/`](indexer) | Soroban event indexer — Postgres sink (OSS template) | T0 stub |
+| [`apps/dashboard/`](apps/dashboard) · [`apps/partner-console/`](apps/partner-console) | Reference enterprise + partner surfaces | T0 stub |
+| [`docs/`](docs) | Architecture, SEP/CAP coverage, grant summary | live |
+
+Payout orchestration is **glue inside the AP business server** (a cursor-batched `Vec<PayoutEntry>` dispatch with fee-bump ×10 retry), **not** a standalone contract.
+
+## Quickstart
+
+Requires **Rust 1.84+** (toolchain pinned in `rust-toolchain.toml`; `wasm32v1-none` target installed automatically), **Node 22+**, and **Docker** (for the local Anchor Platform).
+
+```bash
+# Clone
+git clone git@github.com:bleu/stellar-brl-corridor.git
+cd stellar-brl-corridor
+
+# 1. Build + test all contracts (workspace)
+cargo test --workspace
+cargo build --release --target wasm32v1-none --workspace
+
+# 2. Build the TypeScript SDK (typechecks)
+cd sdk/typescript && npm install && npm run build && cd -
+
+# 3. Bring up the Anchor Platform locally against a sandbox anchor
+cp anchor-platform/env.example anchor-platform/.env
+# edit anchor-platform/.env — see anchor-platform/README.md
+docker compose -f anchor-platform/docker-compose.example.yml up
+```
+
+The `justfile` wraps the common workflows: `just build`, `just test`, `just wasm`, `just ap-up`, `just lint`.
+
+## Verifying our builds
+
+Every Wasm artifact embeds **build provenance** in the `contractmetav0` custom section so anyone can reproduce and hash-verify what's on-chain:
+
+```bash
+# Build with provenance metadata (requires the stellar CLI; install with: cargo install --locked stellar-cli)
+stellar contract build \
+  --meta commit=$(git rev-parse HEAD) \
+  --meta ci_run=$GITHUB_RUN_URL
+
+# Verify a deployed contract's hash matches
+stellar contract fetch --network mainnet --id <CONTRACT_ID> | sha256sum
+```
+
+CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`).
+
+## Deployed addresses
+
+> Testnet addresses populate as we deploy. Mainnet addresses populate after audit (T3).
+
+| Contract | Testnet | Mainnet | Block-explorer |
+| --- | --- | --- | --- |
+| `fx-rate-lock` | `[NEEDS: testnet address]` | `[NEEDS: mainnet address — post-audit]` | `[NEEDS: stellar.expert link]` |
+| `partner-attribution` | `[NEEDS: testnet address]` | `[NEEDS: mainnet address — post-audit]` | `[NEEDS: stellar.expert link]` |
+| `card-collateral-poc` | `[NEEDS: testnet address]` | **testnet PoC only** | `[NEEDS: stellar.expert link]` |
+
+## Roadmap
+
+- **T0 (now)** — Public repo, MIT license, green CI, contract skeletons compiling on testnet.
+- **T1** — Anchor Platform on testnet vs sandbox anchor, SEP-31 receive flow end-to-end, FX rate-lock + partner-attribution feature-complete on testnet, card-collateral PoC running, public walkthrough.
+- **T2** — Audit submitted via Soroban Audit Bank (SDF-provided credits), BR anchor integration scope signed, BCB/LGPD compliance hooks live, reference dashboard.
+- **T3 — Mainnet launch.** Audited contracts live on Stellar Mainnet, E2E corridor flow demonstrable on mainnet, public SDK + reference fintech integration, professional user testing.
+
+Full proposal lives in our team brain (private). Public summary in [`docs/grant.md`](docs/grant.md).
+
+## Standards we consume
+
+SEP-1, SEP-9, SEP-10, SEP-12 (BR custom fields), SEP-24, SEP-31, SEP-38, SEP-41 · CAP-33 (sponsored reserves), CAP-35 (asset clawback inherited from USDC), CAP-46-06 (deterministic USDC SAC), CAP-46-12 (Temporary storage). Full coverage matrix in [`docs/sep-cap-coverage.md`](docs/sep-cap-coverage.md).
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Bug? Open an issue. PRs against `main` are welcome; CI must pass.
+
+## License
+
+[MIT](LICENSE) · © 2026 Bleu LTDA
+
+## Contact
+
+[bleu.builders](https://bleu.builders) · hello@bleu.builders

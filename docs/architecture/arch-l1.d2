@@ -1,0 +1,160 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+title: Bleu · System Context (C4 L1) {
+  near: top-center
+  style.font-size: 32
+  style.bold: true
+}
+
+classes: {
+  actor: {
+    shape: person
+    style.fill: "#f1f5f9"
+    style.stroke: "#64748b"
+  }
+  bleu: {
+    style.fill: "#2563eb"
+    style.font-color: white
+    style.stroke: "#1e40af"
+    style.border-radius: 12
+    style.bold: true
+    style.shadow: true
+  }
+  external: {
+    style.fill: "#e2e8f0"
+    style.stroke: "#64748b"
+  }
+  chain: {
+    style.fill: "#dcfce7"
+    style.stroke: "#15803d"
+  }
+  build-dep: {
+    style.fill: "#fef3c7"
+    style.stroke: "#ca8a04"
+  }
+}
+
+# -- Actors --
+enterprise: |md
+  **Enterprise Customer**
+  Importer · exporter · SMB
+  with cross-border flow
+| {class: actor}
+
+fintech: |md
+  **Fintech Integrator**
+  RecargaPay · Efí · Plusdin · Dinie
+  Embeds Bleu via SDK
+| {class: actor}
+
+fxop: |md
+  **FX / Remittance Operator**
+  Husky · PagBrasil · Ebury · WTM
+  Back-office upgrade
+| {class: actor}
+
+channel: |md
+  **Channel Partner**
+  Accountants · tax advisors ·
+  wealth advisors
+  Earns on-chain rev-share
+| {class: actor}
+
+# -- Bleu Platform --
+bleu: |md
+  ## Bleu Platform
+  **BR/PIX Corridor on Stellar**
+
+  BR-configured Anchor Platform +
+  2 Soroban primitives
+  (+ card-collateral PoC on testnet).
+  MIT · open source.
+| {class: bleu}
+
+# -- Anchor ecosystem --
+anchor: |md
+  **BR Stellar Anchor**
+  BACEN FX-licensed (10-candidate pool)
+  offshore Stellar anchor = fallback
+  SEP-10 · SEP-12 · SEP-31 · SEP-38
+| {class: external}
+
+pix: |md
+  **PIX**
+  BCB SPI (via anchor)
+| {class: external}
+
+# -- BYO adapters --
+kyc: |md
+  **BYO KYC / KYB**
+  Idwall · Unico · Truora ·
+  Onfido · Sumsub
+  (SEP-12 pass-through)
+| {class: external}
+
+wallet: |md
+  **BYO Wallet / Custody**
+  Freighter · LOBSTR · Vibrant
+  Fireblocks · BitGo · Anchorage
+  Dynamic · Privy · Turnkey
+  (Bleu holds no keys)
+| {class: external}
+
+# -- Chain --
+stellar: |md
+  **Stellar Network (Mainnet)**
+  Soroban RPC + Horizon
+  SCP ~5s finality
+| {class: chain}
+
+usdc: |md
+  **USDC SAC**
+  Circle-issued, native
+  AUTH_CLAWBACK_ENABLED
+  CAP-46-06 deterministic ID
+| {class: chain}
+
+# -- Card network (testnet PoC, hybrid architecture) --
+card_net: |md
+  **Card Network / Issuer / Processor**
+  Visa · Mastercard
+  BIN sponsor · EMI
+  (Monavate-pattern · offchain)
+  *(card-collateral PoC only)*
+| {class: external}
+
+# -- Build dependency --
+oz: |md
+  **OpenZeppelin Stellar Contracts**
+  stellar-contracts =0.7.1 · MIT
+  audited · SDF collaboration
+  *(build-time dep)*
+| {class: build-dep}
+
+# -- User flows --
+enterprise -> bleu: "Payment / payout\nREST + webhook"
+fintech -> bleu: "SDK (TS/Python)\nSEP-31 quote_id flow"
+fxop -> bleu: "Orchestrator\nBRL ↔ USDC"
+channel -> bleu: "partner_transfer\nevent rev-share"
+
+# -- Platform → anchor + off-chain --
+bleu -> anchor: "SEP-10/12/31/38\nJSON-RPC callbacks"
+bleu -> kyc: "SEP-12\nPUT /customer"
+bleu -> wallet: "External signing\n(no-key posture)"
+anchor -> pix: "BRL cash-out (SPI)"
+
+# -- Platform → chain --
+bleu -> stellar: "Prepare → Sign → Submit\nsimulateTx · sendTx · getEvents"
+bleu -> usdc: "SAC transfer / transfer_from"
+usdc -> stellar: "runs on" {style.stroke-dash: 4}
+
+# -- Hybrid card architecture (testnet PoC) --
+bleu -> card_net: "issuer-API adapter (PoC)\nauth · capture · refund\n(offchain webhooks)"
+card_net -> bleu: "auth decisions\nsettlement feed"
+
+# -- Build-time --
+oz -> bleu: "composes:\nsac_admin_wrapper ·\nFeeAbstraction ·\nSmartAccount + policies (PoC)"
