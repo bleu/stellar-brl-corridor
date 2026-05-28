@@ -37,6 +37,14 @@ wasm:
       --meta commit=$(git rev-parse HEAD) \
       --meta ci_run=${GITHUB_RUN_URL:-local}
 
+# Deploy the contracts to a network (default testnet). Requires the stellar CLI.
+deploy-testnet network="testnet":
+    scripts/deploy_testnet.sh {{network}}
+
+# Generate TypeScript bindings from a deployed contract id.
+bindings contract_id network="testnet":
+    stellar contract bindings typescript --network {{network}} --contract-id {{contract_id}} --output-dir sdk/typescript/src/generated --overwrite
+
 # Anchor Platform — bring up local stack against a sandbox anchor
 ap-up:
     docker compose -f anchor-platform/docker-compose.example.yml up

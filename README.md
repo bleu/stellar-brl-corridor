@@ -1,7 +1,7 @@
 # Bleu — Stellar BRL/PIX Corridor
 
 > Operationalizing **Anchor Platform** + **SDP** + Soroban for Brazil's BRL/PIX corridor on Stellar.
-> MIT-licensed. Production engineering studio. Tranche-0 skeleton — currently building.
+> MIT-licensed. Three Soroban contracts implemented + tested (19 unit tests, CI green); Anchor Platform config, SDK, indexer, and dashboard scaffolds in progress. Pre-mainnet.
 
 [![CI](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml/badge.svg)](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -31,9 +31,9 @@ See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthro
 
 | Path | Component | Status |
 | --- | --- | --- |
-| [`contracts/fx-rate-lock/`](contracts/fx-rate-lock) | **SEP-38 Rate-Lock** — locks firm quotes in Temporary storage (CAP-46-12); dies at TTL=0 | T0 skeleton → mainnet, audited |
-| [`contracts/partner-attribution/`](contracts/partner-attribution) | **Partner-Attribution Wrapper** — SEP-41 SAC wrapper over USDC; `partner_transfer` event; `Σ partner.bps ≤ 10_000` invariant | T0 skeleton → mainnet, audited |
-| [`contracts/card-collateral-poc/`](contracts/card-collateral-poc) | **Card-Collateral Smart Account** — Custom Account, USDC-only yield (never XLM) | T0 skeleton → **testnet PoC only** |
+| [`contracts/fx-rate-lock/`](contracts/fx-rate-lock) | **SEP-38 Rate-Lock** — locks firm quotes in Temporary storage (CAP-46-12); dies at TTL=0 | Implemented + tested · audit → mainnet |
+| [`contracts/partner-attribution/`](contracts/partner-attribution) | **Partner-Attribution Wrapper** — SEP-41 SAC wrapper over USDC; `partner_transfer` event; `Σ partner.bps ≤ 10_000` invariant | Implemented + tested · audit → mainnet |
+| [`contracts/card-collateral-poc/`](contracts/card-collateral-poc) | **Card-Collateral Smart Account** — Custom Account, USDC-only yield (never XLM) | Implemented + tested · **testnet PoC** |
 | [`anchor-platform/`](anchor-platform) | BR-configured Anchor Platform deployment — SEP-10/12/24/31/38, IOF in `fee.details[]`, payout-orchestration glue in the AP business server | T0 stubs → testnet vs sandbox anchor |
 | [`sdk/typescript/`](sdk/typescript) · [`sdk/python/`](sdk/python) | Public SDKs (generated from Soroban contract specs via `stellar contract bindings`) | T0 skeleton → T3 published to npm + PyPI |
 | [`indexer/`](indexer) | Soroban event indexer — Postgres sink (OSS template) | T0 stub |
