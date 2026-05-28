@@ -39,6 +39,11 @@ jobs:
         run: cargo test --workspace --locked
 
       - name: Build Wasm release artifacts
+        # The OZ stellar-contracts (=0.7.1) deps enable soroban-sdk's
+        # `experimental_spec_shaking_v2` feature, which requires this flag (set
+        # internally by `stellar contract build`) for the wasm target.
+        env:
+          SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2: "1"
         run: cargo build --release --target wasm32v1-none --workspace --locked
 
       - name: Upload Wasm artifacts

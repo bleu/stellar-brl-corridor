@@ -1,7 +1,13 @@
 # Bleu — Stellar BRL/PIX Corridor — Cargo workspace
 # Three Soroban contracts (fx-rate-lock, partner-attribution, card-collateral-poc),
-# implemented + unit-tested. OZ stellar-contracts composition lands at the
-# audit/mainnet-hardening pass.
+# implemented + unit-tested. Each contract composes OpenZeppelin's audited
+# `stellar-contracts` building blocks (=0.7.1) on top of soroban-sdk.
+#
+# Version note: OZ stellar-contracts 0.7.1 — the latest release as of 2026-05 —
+# requires soroban-sdk `^25.3.0` (i.e. `>=25.3.0, <26`). To compose =0.7.1 for
+# real, soroban-sdk is pinned to =25.3.0 here. There is no OZ release that
+# supports soroban-sdk 26 yet; the grant proposal's "=0.7.1 + soroban-sdk 26"
+# pairing is not buildable until OZ ships a 26-compatible release.
 
 [workspace]
 resolver = "2"
@@ -20,7 +26,19 @@ repository = "https://github.com/bleu/stellar-brl-corridor"
 rust-version = "1.84"
 
 [workspace.dependencies]
-soroban-sdk = "26"
+# Pinned to OZ's own soroban-sdk pin at 0.7.1. OZ 0.7.1 transitively enables
+# soroban-sdk's `experimental_spec_shaking_v2` feature; building the wasm target
+# therefore requires `SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2=1` (what
+# `stellar contract build` sets). The justfile and CI wasm step set it.
+soroban-sdk = { version = "=25.3.0" }
+
+# OpenZeppelin stellar-contracts =0.7.1 (audited building blocks).
+stellar-tokens = "=0.7.1"
+stellar-access = "=0.7.1"
+stellar-accounts = "=0.7.1"
+stellar-contract-utils = "=0.7.1"
+stellar-fee-abstraction = "=0.7.1"
+stellar-macros = "=0.7.1"
 
 # Soroban-recommended release profile for on-chain Wasm.
 # https://developers.stellar.org/docs/build/smart-contracts/getting-started/hello-world

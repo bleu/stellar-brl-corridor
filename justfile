@@ -9,9 +9,12 @@ default:
 # Build everything (contracts + SDK)
 build: build-contracts build-sdk
 
-# Build the three Soroban contracts in release mode against wasm32v1-none
+# Build the three Soroban contracts in release mode against wasm32v1-none.
+# SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2 is required because the OZ
+# stellar-contracts (=0.7.1) deps enable soroban-sdk's `experimental_spec_shaking_v2`
+# feature; it is exactly what `stellar contract build` sets internally.
 build-contracts:
-    cargo build --release --target wasm32v1-none --workspace --locked
+    SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2=1 cargo build --release --target wasm32v1-none --workspace --locked
 
 # Build the TypeScript SDK
 build-sdk:

@@ -15,15 +15,19 @@
 //! licensed anchor collects it at conversion — this contract only discloses it
 //! and binds it to the locked rate.
 //!
-//! In production the lock lifecycle composes OpenZeppelin's audited
-//! `stellar_fee_abstraction::validate_expiration_ledger` ledger-sequence
-//! pattern; this module owns the SEP-38 quote hashing + Temporary lifecycle.
+//! The lock lifecycle composes OpenZeppelin's audited
+//! `stellar_fee_abstraction::validate_expiration_ledger` (stellar-contracts
+//! =0.7.1) for the ledger-sequence rate-lock deadline check, rather than a
+//! hand-rolled comparison. This module owns the remaining novel surface: the
+//! SEP-38 quote hashing, price invariant, Temporary-storage lifecycle, and the
+//! `quote_use` settlement event.
 
 #![no_std]
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, Address, BytesN, Env,
 };
+use stellar_fee_abstraction::validate_expiration_ledger;
 
 /// Fixed-point scale for `price` (7 dp, matching Stellar asset precision).
 const PRICE_SCALE: i128 = 10_000_000;
@@ -173,9 +177,17 @@ impl RateLock {
             .get(&key)
             .ok_or(Error::QuoteNotFound)?;
 
-        if env.ledger().sequence() >= quote.expires_at_ledger {
+        // Rate-lock deadline: the quote is live while
+        // `now < expires_at_ledger`, i.e. the last valid ledger is
+        // `expires_at_ledger - 1`. We translate the boundary to a typed
+        // `QuoteExpired` for clients, then route the authoritative check
+        // through OZ's audited `validate_expiration_ledger`, which panics
+        // unless `last_valid_ledger >= now` — keeping the two in lockstep.
+        let last_valid_ledger = quote.expires_at_ledger.saturating_sub(1);
+        if env.ledger().sequence() > last_valid_ledger {
             return Err(Error::QuoteExpired);
         }
+        validate_expiration_ledger(&env, last_valid_ledger);
         if quote.consumed {
             return Err(Error::QuoteAlreadyConsumed);
         }
