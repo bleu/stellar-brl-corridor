@@ -2,24 +2,34 @@
 //!
 //! Binds distribution partners (accountants, FX operators, fintech channels) to
 //! an on-chain revenue split, so B2B2B economics are auditable on the ledger
-//! instead of reconciled off-chain. Each settled flow emits a `partner_transfer`
-//! event carrying the partner, the asset, the amount, and the attributed fee.
+//! instead of reconciled off-chain.
 //!
-//! Invariant: the sum of all partner basis points can never exceed 10_000
-//! (100%). It is enforced on every write via a running `TotalBps` counter, so a
-//! mis-configuration can't over-allocate the spread.
+//! This contract is a SAC admin wrapper over USDC's deterministic Stellar Asset
+//! Contract. It composes OpenZeppelin's audited `stellar-contracts` (=0.7.1):
 //!
-//! In production this is a thin layer over OpenZeppelin's audited
-//! `stellar_tokens::fungible::sac_admin_wrapper`, composing with USDC's
-//! deterministic SAC so wallets still see standard SEP-41 `transfer` events;
-//! this module owns the attribution accounting, the `Σ bps ≤ 10_000` invariant,
-//! and the `partner_transfer` event added on top of the audited wrapper.
+//! - `stellar_tokens::fungible::sac_admin_wrapper` — wraps the USDC SAC. The
+//!   wrapper stores the SAC address and exposes the audited admin passthroughs
+//!   (`set_admin`, `set_authorized`, `mint`, `clawback`). Settlement moves real
+//!   balance through the SAC's SEP-41 `transfer`, so wallets and explorers still
+//!   see standard token transfer events.
+//! - `stellar_access::access_control` (+ `stellar_macros::only_admin`) — gates
+//!   every admin op and the settlement split behind the contract admin's auth.
+//!
+//! The novel surface this module owns, on top of the audited wrapper, is small:
+//! the partner attribution accounting, the `Σ bps ≤ 10_000` invariant, the
+//! `partner_transfer` event, and the batched payout split dispatched through the
+//! audited SAC `transfer`.
 
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractevent, contractimpl, contracttype, Address, BytesN, Env,
-    Symbol,
+    contract, contracterror, contractevent, contractimpl, contracttype, token::TokenClient,
+    Address, BytesN, Env, Symbol, Vec,
+};
+use stellar_access::access_control::{self as access_control, AccessControl};
+use stellar_macros::only_admin;
+use stellar_tokens::fungible::sac_admin_wrapper::{
+    self, get_sac_address, set_sac_address, SACAdminWrapper,
 };
 
 /// 100% in basis points.
@@ -34,6 +44,7 @@ pub enum Error {
     BpsCapExceeded = 3,
     InvalidAmount = 4,
     Overflow = 5,
+    SplitExceedsTotal = 6,
 }
 
 /// A distribution partner and its share of the incremental spread.
@@ -48,7 +59,6 @@ pub struct Partner {
 #[contracttype]
 #[derive(Clone)]
 enum DataKey {
-    Admin,
     TotalBps,
     Partner(Address),
 }
@@ -70,8 +80,8 @@ pub struct PartnerRemoved {
     pub total_bps: u32,
 }
 
-/// Emitted at settlement with the attributed revenue split. Topic:
-/// `partner_transfer`, partner, anchor_asset.
+/// Emitted per partner when a settlement is split and paid out through the SAC.
+/// Topic: `partner_transfer`, partner, anchor_asset (the wrapped SAC address).
 #[contractevent]
 pub struct PartnerTransfer {
     #[topic]
@@ -89,14 +99,18 @@ pub struct PartnerAttribution;
 
 #[contractimpl]
 impl PartnerAttribution {
-    pub fn __constructor(env: Env, admin: Address) {
-        let s = env.storage().instance();
-        s.set(&DataKey::Admin, &admin);
-        s.set(&DataKey::TotalBps, &0u32);
+    /// Initialize with the contract admin (the anchor's business server) and the
+    /// USDC SAC address this contract wraps. The admin gates every admin op and
+    /// the settlement split; the SAC address is where real balance moves.
+    pub fn __constructor(env: Env, admin: Address, usdc_sac: Address) {
+        access_control::set_admin(&env, &admin);
+        set_sac_address(&env, &usdc_sac);
+        env.storage().instance().set(&DataKey::TotalBps, &0u32);
     }
 
-    /// Create or update a partner. Admin-authenticated. Re-derives the running
-    /// total and rejects any write that would push `Σ bps` over 100%.
+    /// Create or update a partner. Admin-gated via OZ access control. Re-derives
+    /// the running total and rejects any write that would push `Σ bps` over 100%.
+    #[only_admin]
     pub fn set_partner(
         env: Env,
         partner: Address,
@@ -104,7 +118,6 @@ impl PartnerAttribution {
         payout: Address,
         domain: Symbol,
     ) -> Result<(), Error> {
-        Self::admin(&env)?.require_auth();
         if fee_bps > MAX_BPS {
             return Err(Error::BpsCapExceeded);
         }
@@ -140,9 +153,10 @@ impl PartnerAttribution {
         Ok(())
     }
 
-    /// Remove a partner and free its basis points. Admin-authenticated.
+    /// Remove a partner and free its basis points. Admin-gated via OZ access
+    /// control.
+    #[only_admin]
     pub fn remove_partner(env: Env, partner: Address) -> Result<(), Error> {
-        Self::admin(&env)?.require_auth();
         let existing = Self::partner(&env, &partner).ok_or(Error::PartnerNotFound)?;
 
         let total = Self::total_bps(env.clone());
@@ -160,36 +174,68 @@ impl PartnerAttribution {
         Ok(())
     }
 
-    /// Record an attributed settlement and emit `partner_transfer`. Returns the
-    /// fee owed to the partner. Admin-authenticated (called at settlement time).
-    pub fn record_attribution(
+    /// Settle a flow and atomically split it to the listed partners through the
+    /// wrapped USDC SAC's SEP-41 `transfer`. Admin-gated via OZ access control;
+    /// `from` authorizes the debit. For each partner the contract transfers
+    /// `amount * fee_bps / 10_000` from `from` to the partner payout and emits a
+    /// `partner_transfer`. The split is atomic: any sub-transfer that fails
+    /// reverts the whole settlement.
+    ///
+    /// Returns the total amount transferred to partners (the residual stays with
+    /// `from`). Rejects if the partners' combined bps would move more than
+    /// `amount` (defense in depth on top of the per-write `Σ bps ≤ 10_000`
+    /// invariant).
+    #[only_admin]
+    pub fn settle_split(
         env: Env,
-        partner: Address,
-        anchor_asset: Address,
+        from: Address,
         amount: i128,
+        partners: Vec<Address>,
         tx_hash: BytesN<32>,
     ) -> Result<i128, Error> {
-        Self::admin(&env)?.require_auth();
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
-        let p = Self::partner(&env, &partner).ok_or(Error::PartnerNotFound)?;
 
-        let fee = amount
-            .checked_mul(p.fee_bps as i128)
-            .ok_or(Error::Overflow)?
-            / MAX_BPS as i128;
+        let sac = get_sac_address(&env);
+        let token = TokenClient::new(&env, &sac);
 
-        PartnerTransfer {
-            partner,
-            anchor_asset,
-            amount,
-            fee_bps: p.fee_bps,
-            fee,
-            tx_hash,
+        let mut total_paid: i128 = 0;
+        let mut total_bps_used: u32 = 0;
+
+        for partner in partners.iter() {
+            let p = Self::partner(&env, &partner).ok_or(Error::PartnerNotFound)?;
+            total_bps_used = total_bps_used
+                .checked_add(p.fee_bps)
+                .ok_or(Error::Overflow)?;
+            if total_bps_used > MAX_BPS {
+                return Err(Error::SplitExceedsTotal);
+            }
+
+            let share = amount
+                .checked_mul(p.fee_bps as i128)
+                .ok_or(Error::Overflow)?
+                / MAX_BPS as i128;
+
+            if share > 0 {
+                // Real SEP-41 transfer through the wrapped SAC — moves balance
+                // and emits a standard token `transfer` event wallets can see.
+                token.transfer(&from, &p.payout, &share);
+                total_paid = total_paid.checked_add(share).ok_or(Error::Overflow)?;
+            }
+
+            PartnerTransfer {
+                partner: partner.clone(),
+                anchor_asset: sac.clone(),
+                amount,
+                fee_bps: p.fee_bps,
+                fee: share,
+                tx_hash: tx_hash.clone(),
+            }
+            .publish(&env);
         }
-        .publish(&env);
-        Ok(fee)
+
+        Ok(total_paid)
     }
 
     pub fn get_partner(env: Env, partner: Address) -> Option<Partner> {
@@ -203,11 +249,9 @@ impl PartnerAttribution {
             .unwrap_or(0)
     }
 
-    fn admin(env: &Env) -> Result<Address, Error> {
-        env.storage()
-            .instance()
-            .get(&DataKey::Admin)
-            .ok_or(Error::NotInitialized)
+    /// The wrapped USDC SAC address.
+    pub fn sac_address(env: Env) -> Address {
+        get_sac_address(&env)
     }
 
     fn partner(env: &Env, partner: &Address) -> Option<Partner> {
@@ -216,6 +260,37 @@ impl PartnerAttribution {
             .get(&DataKey::Partner(partner.clone()))
     }
 }
+
+// Expose the audited OZ SAC admin-wrapper interface. Each admin passthrough is
+// gated by the contract admin via `#[only_admin]`, then forwards to the audited
+// `sac_admin_wrapper` helper which performs the actual SAC admin call.
+#[contractimpl]
+impl SACAdminWrapper for PartnerAttribution {
+    #[only_admin]
+    fn set_admin(e: Env, new_admin: Address, _operator: Address) {
+        sac_admin_wrapper::set_admin(&e, &new_admin);
+    }
+
+    #[only_admin]
+    fn set_authorized(e: Env, id: Address, authorize: bool, _operator: Address) {
+        sac_admin_wrapper::set_authorized(&e, &id, authorize);
+    }
+
+    #[only_admin]
+    fn mint(e: Env, to: Address, amount: i128, _operator: Address) {
+        sac_admin_wrapper::mint(&e, &to, amount);
+    }
+
+    #[only_admin]
+    fn clawback(e: Env, from: Address, amount: i128, _operator: Address) {
+        sac_admin_wrapper::clawback(&e, &from, amount);
+    }
+}
+
+// Expose the audited OZ AccessControl interface (grant/revoke roles, admin
+// transfer, queries) so role administration is on-chain and standard.
+#[contractimpl(contracttrait)]
+impl AccessControl for PartnerAttribution {}
 
 #[cfg(test)]
 mod test;
