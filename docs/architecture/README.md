@@ -14,13 +14,13 @@ This document is **Stellar-specific** and shows the integration plan against the
 
 Bleu operationalizes two SDF reference implementations — **Anchor Platform** (SEP-10/12/24/31/38) and the **Stellar Disbursement Platform** (SDP, whose one-way bulk-disbursement pattern Bleu makes bidirectional at the API surface) — for Brazil's BRL/PIX corridor, and ships **two** MIT-licensed Soroban primitives (implemented + tested in this repo, audit-bound pre-mainnet) on top:
 
-1. **SEP-38 Rate-Lock** *(mainnet-bound, audit pending)* — firm-quote contract using Temporary storage (CAP-46-12) for quote rows keyed by `DataKey::Quote(BytesN<32>)`; Bleu owns the SEP-38 quote hashing and Temporary-storage lifecycle. The mainnet-hardening pass reuses OpenZeppelin's `stellar_fee_abstraction::validate_expiration_ledger` ledger-sequence pattern (see [Contract Overview](#3-contract-overview)).
-2. **Partner-Attribution Wrapper** *(mainnet-bound, audit pending)* — SEP-41-compatible SAC wrapper on USDC, emitting a `partner_transfer` event and enforcing `Σ partner.bps ≤ 10_000`. The mainnet-hardening pass composes OpenZeppelin's `stellar_tokens::fungible::sac_admin_wrapper` over USDC's deterministic SAC.
+1. **SEP-38 Rate-Lock** *(mainnet-bound, audit pending)* — firm-quote contract using Temporary storage (CAP-46-12) for quote rows keyed by `DataKey::Quote(BytesN<32>)`; Bleu owns the SEP-38 quote hashing and Temporary-storage lifecycle. The consume path composes OpenZeppelin's `stellar_fee_abstraction::validate_expiration_ledger` as the authoritative rate-lock deadline guard (see [Contract Overview](#3-contract-overview)).
+2. **Partner-Attribution Wrapper** *(mainnet-bound, audit pending)* — a SAC admin wrapper on USDC built on OpenZeppelin's `stellar_tokens::fungible::sac_admin_wrapper` over USDC's deterministic SAC, gated by `stellar_access::access_control`. Its `settle_split` moves real balance through the SAC's SEP-41 `transfer`, atomically splitting to partner payouts; it emits a `partner_transfer` event and enforces `Σ partner.bps ≤ 10_000`.
 
 Two further pieces are **not** standalone audited contracts:
 
 - **Payout orchestration is glue, not a contract.** Batched bidirectional dispatch (USDC SAC `transfer` under `require_auth()` over `Vec<PayoutEntry>` keyed by `(batch_id, cursor)`, monotonic `processed_cursor`, fee-bump ×10 retry) lives in the **Anchor Platform business server**, making the SDP one-way bulk model bidirectional for B2B.
-- **Card-Collateral Vault is a testnet PoC.** The PoC implements the collateral state machine (`reserve` / `settle` / `release`) and the auth/clearing shortfall accounting; the production vault would compose OpenZeppelin's `stellar_accounts::smart_account::SmartAccount` (`do_check_auth`) + `policies::spending_limit` + `verifiers::webauthn` / `ed25519` + `stellar_contract_utils::pausable`, with CAP-21 `minSeqAge` cool-downs and CAP-23 claimable-balance auto-return as Bleu-specific glue. Demonstrates a Stellar-only capability — collateral can keep earning **USDC** yield (never XLM) while a policy releases only the spent slice at card auth. Off the audit/mainnet critical path.
+- **Card-Collateral Vault is a testnet PoC.** The PoC implements the collateral state machine (`reserve` / `settle` / `release`) and the auth/clearing shortfall accounting, composing OpenZeppelin's `stellar_contract_utils::pausable` (circuit breaker on new collateral) + `stellar_access::access_control` (admin gating). The production vault additionally composes OpenZeppelin's `stellar_accounts::smart_account::SmartAccount` (`do_check_auth`) + `policies::spending_limit` + `verifiers::webauthn` / `ed25519`, with CAP-21 `minSeqAge` cool-downs and CAP-23 claimable-balance auto-return as Bleu-specific glue. Demonstrates a Stellar-only capability — collateral can keep earning **USDC** yield (never XLM) while a policy releases only the spent slice at card auth. Off the audit/mainnet critical path.
 
 Fintechs, FX operators, and channel partners consume the stack via REST API, TypeScript / Python SDK, or a reference dashboard. **Bleu holds no keys.** End-user funds flow through a **BACEN FX-licensed Brazilian anchor** (selected from a 10-candidate pool; an offshore Stellar-compatible anchor is the tested "or equivalent" fallback) that holds the regulated functions (FX, custody, KYC/KYB, COAF, Res 521 reporting).
 
@@ -67,7 +67,7 @@ Actors: **Enterprise Customer**, **Fintech Integrator**, **FX / Remittance Opera
 
 External systems: **BR Stellar Anchor** (BACEN FX-licensed, 10-candidate pool; offshore fallback), **PIX** (via anchor), **BYO KYC/KYB** (Idwall · Unico · Truora · Onfido · Sumsub via SEP-12), **BYO Wallet/Custody**, **Stellar Network**, **USDC SAC**, **Card Network/Issuer** (offchain — relevant only to the card-collateral PoC).
 
-Planned build-time dependency (mainnet-hardening pass): **OpenZeppelin Stellar Contracts** (`stellar-contracts =0.7.1`, MIT, audited, SDF collaboration). Not yet wired into the contracts in this repo.
+Build-time dependency (composed today): **OpenZeppelin Stellar Contracts** (`stellar-contracts =0.7.1`, MIT, audited by OZ, SDF collaboration), wired into all three contracts. OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pins `soroban-sdk =25.3.0`.
 
 ### 2.3 C4 L2 — Containers
 
@@ -113,19 +113,19 @@ The atomic five-operation transaction that creates a zero-XLM-ready account: `Be
 
 **Two** mainnet-bound Soroban contracts (to run under 2-of-3 admin multisig, upgradeable via `update_current_contract_wasm` where applicable) + **one** testnet PoC + the inherited USDC SAC. Payout orchestration is AP-server glue, not a contract.
 
-The "OZ composition" column is the **mainnet-hardening target** — the audited OpenZeppelin building blocks each contract is designed to compose at the mainnet pass. The contracts in this repo today implement the Bleu-specific logic ("Emitted events" + "Bleu-specific" columns) standalone on `soroban-sdk`; the OZ `stellar-contracts =0.7.1` crates are not yet wired in (tracked for the audit/mainnet pass).
+The "OZ composition" column lists the audited OpenZeppelin building blocks each contract composes **today** (wired in, not aspirational), plus — for card-collateral — the additional blocks reserved for the production vault. The Bleu-specific column is the novel surface that remains the audit focus. OZ `=0.7.1` requires `soroban-sdk ^25.3.0`; the workspace pins `soroban-sdk =25.3.0`. "Audit-bound" means the audit is the T3 deliverable — these contracts are **not yet audited**.
 
-| Contract | Status | Storage (today) | Emitted events (today) | OZ composition (mainnet target) | Bleu-specific |
+| Contract | Status | Storage (today) | Emitted events (today) | OZ composition (composed today) | Bleu-specific |
 | --- | --- | --- | --- | --- | --- |
-| **SEP-38 Rate-Lock** | Implemented + tested · audit-bound | Temporary + Instance | `quote_locked`, `quote_use` | `stellar_fee_abstraction::validate_expiration_ledger` pattern | Quote hashing, Temporary-storage lifecycle, on-chain re-derivation of SEP-38 Price-Formulas invariant |
-| **Partner-Attribution Wrapper** | Implemented + tested · audit-bound | Persistent + Instance | `partner_set`, `partner_removed`, `partner_transfer` | `stellar_tokens::fungible::sac_admin_wrapper` + `stellar_access::access_control::AccessControl` | `partner_transfer` event, `Σ bps ≤ 10_000` invariant, CAP-46-06 composition with USDC SAC |
-| **Card-Collateral Vault** | **Testnet PoC** | Persistent + Instance | `collateral_locked`, `card_settle`, `shortfall`, `collateral_released` | `stellar_accounts::smart_account::SmartAccount` + `policies::spending_limit` + `verifiers::webauthn` / `ed25519` + `pausable` | shortfall invariant (`locked ≥ authorized − settled` in the normal path), CAP-21 `minSeqAge` cool-downs, CAP-23 auto-return, **USDC-only** yield (never XLM) |
+| **SEP-38 Rate-Lock** | Implemented + tested · audit-bound | Temporary + Instance | `quote_locked`, `quote_use` | `stellar_fee_abstraction::validate_expiration_ledger` (rate-lock deadline guard) | Quote hashing, Temporary-storage lifecycle, on-chain re-derivation of SEP-38 Price-Formulas invariant |
+| **Partner-Attribution Wrapper** | Implemented + tested · audit-bound | Persistent + Instance | `partner_set`, `partner_removed`, `partner_transfer` | `stellar_tokens::fungible::sac_admin_wrapper` + `stellar_access::access_control::AccessControl` | `partner_transfer` event, `Σ bps ≤ 10_000` invariant, atomic `settle_split` over the USDC SAC `transfer` |
+| **Card-Collateral Vault** | **Testnet PoC** | Persistent + Instance | `collateral_locked`, `card_settle`, `shortfall`, `collateral_released` | `stellar_contract_utils::pausable` + `stellar_access::access_control` (composed today); `stellar_accounts::smart_account::SmartAccount` + `policies::spending_limit` + `verifiers::webauthn` / `ed25519` (production-vault target) | shortfall invariant (`locked ≥ authorized − settled` in the normal path), CAP-21 `minSeqAge` cool-downs, CAP-23 auto-return, **USDC-only** yield (never XLM) |
 
 ---
 
 ## 4. Technology Stack
 
-- **Soroban Contracts** — Rust, `soroban-sdk` (workspace pin); the mainnet-hardening pass composes OpenZeppelin's `stellar-contracts =0.7.1` crates (not yet wired in — tracked for the audit/mainnet pass). Wasm target: `wasm32v1-none` (Rust ≥1.84). Build provenance via `stellar contract build --meta`.
+- **Soroban Contracts** — Rust, `soroban-sdk =25.3.0` (workspace pin), composing OpenZeppelin's `stellar-contracts =0.7.1` crates (wired into all three contracts today; OZ 0.7.1 requires `soroban-sdk ^25.3.0`). Wasm target: `wasm32v1-none` (Rust ≥1.84). OZ 0.7.1 enables soroban-sdk's `experimental_spec_shaking_v2`, so the wasm build sets `SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2=1` (the flag `stellar contract build` sets). Build provenance via `stellar contract build --meta`.
 - **AP Business Server & Orchestrator** — Node.js + TypeScript, Fastify; Prepare→Sign→Submit via Stellar RPC; cursor-batched payout dispatch with fee-bump ×10 retries.
 - **AP SEP Server** — SDF reference Java implementation, deployed via Docker Compose locally and Helm in production.
 - **Frontend** — React + Vite + TypeScript + Tailwind + shadcn/ui. TypeScript bindings generated from Soroban specs via `stellar contract bindings`.
@@ -141,7 +141,7 @@ The "OZ composition" column is the **mainnet-hardening target** — the audited 
 3. **Stellar Disbursement Platform** — SDF reference; bulk-disbursement pattern reused as AP-server payout glue (bidirectional B2B).
 4. **BACEN FX-licensed BR anchor** — selected from a 10-candidate pool (offshore Stellar anchor as the "or equivalent" fallback).
 5. **USDC on Stellar** — Circle-issued native asset via deterministic SAC (CAP-46-06).
-6. **OpenZeppelin Stellar Contracts** — `stellar-contracts =0.7.1`, MIT, audited, SDF collaboration. Planned dependency for the mainnet-hardening pass; not yet wired into the contracts in this repo.
+6. **OpenZeppelin Stellar Contracts** — `stellar-contracts =0.7.1`, MIT, audited by OZ, SDF collaboration. Composed into all three contracts today (requires `soroban-sdk ^25.3.0`; workspace pins `=25.3.0`).
 7. **Soroban event indexer** — Postgres sink (OSS template).
 8. **BYO KYC/KYB** — Idwall, Unico, Truora, Onfido, Sumsub via SEP-12 `PUT /customer`.
 9. **BYO Wallet / Custody** — Freighter, LOBSTR, Vibrant (retail); Fireblocks, BitGo, Anchorage (institutional); Dynamic, Privy, Turnkey (embedded).

@@ -15,10 +15,14 @@ reports. We aim to acknowledge within two business days.
 
 ## Audit status
 
-- Pre-mainnet: external review via SDF's Soroban Audit Bank (grant Tranche-3).
-- Planned build-time dependency (mainnet-hardening pass, not yet wired in):
-  OpenZeppelin `stellar-contracts =0.7.1` (MIT, audited by OpenZeppelin's
-  security team; formal verification by Certora).
+- These contracts are **not yet audited**. External review is the Tranche-3
+  deliverable, via SDF's Soroban Audit Bank, before mainnet.
+- Build-time dependency (composed into all three contracts today): OpenZeppelin
+  `stellar-contracts =0.7.1` (MIT, audited by OpenZeppelin's security team;
+  formal verification by Certora). Composing these audited building blocks
+  shrinks the novel surface that needs Bleu's own audit — it does **not** make
+  the Bleu contracts audited. OZ 0.7.1 requires `soroban-sdk ^25.3.0`; the
+  workspace pins `soroban-sdk =25.3.0`.
 
 ## Build provenance
 
