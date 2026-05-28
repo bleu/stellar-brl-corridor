@@ -88,6 +88,58 @@ fn record_attribution_computes_fee() {
 }
 
 #[test]
+fn attribution_rejects_nonpositive_amount() {
+    let (env, c) = setup();
+    let p1 = Address::generate(&env);
+    let asset = Address::generate(&env);
+    let dom = Symbol::new(&env, "d");
+    c.set_partner(&p1, &3000, &p1, &dom);
+
+    let tx = BytesN::from_array(&env, &[7u8; 32]);
+    assert_eq!(
+        c.try_record_attribution(&p1, &asset, &0, &tx)
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::InvalidAmount
+    );
+    assert_eq!(
+        c.try_record_attribution(&p1, &asset, &-1, &tx)
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::InvalidAmount
+    );
+}
+
+#[test]
+fn freeing_room_then_adding_third_partner_succeeds() {
+    let (env, c) = setup();
+    let p1 = Address::generate(&env);
+    let p2 = Address::generate(&env);
+    let p3 = Address::generate(&env);
+    let dom = Symbol::new(&env, "d");
+    c.set_partner(&p1, &6000, &p1, &dom);
+    c.set_partner(&p2, &4000, &p2, &dom);
+    assert_eq!(c.total_bps(), 10000); // fully allocated
+
+    // A third partner cannot fit yet.
+    assert_eq!(
+        c.try_set_partner(&p3, &1000, &p3, &dom)
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::BpsCapExceeded
+    );
+
+    // Lower p1 to free room, then the previously-impossible write succeeds.
+    c.set_partner(&p1, &5000, &p1, &dom);
+    c.set_partner(&p3, &1000, &p3, &dom);
+    assert_eq!(c.total_bps(), 10000);
+    assert_eq!(c.get_partner(&p3).unwrap().fee_bps, 1000);
+}
+
+#[test]
 fn attribution_for_unknown_partner_fails() {
     let (env, c) = setup();
     let ghost = Address::generate(&env);

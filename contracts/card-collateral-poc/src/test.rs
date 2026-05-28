@@ -86,4 +86,44 @@ fn rejects_nonpositive_reserve() {
         c.try_reserve(&id, &0, &200).err().unwrap().unwrap(),
         Error::InvalidAmount
     );
+    // Zero TTL is rejected as well.
+    assert_eq!(
+        c.try_reserve(&id, &100, &0).err().unwrap().unwrap(),
+        Error::InvalidAmount
+    );
+}
+
+#[test]
+fn settle_rejects_negative_final_amount() {
+    let (env, c) = setup();
+    let id = aid(&env, 6);
+    c.reserve(&id, &100_000_000, &200);
+    assert_eq!(
+        c.try_settle(&id, &-1).err().unwrap().unwrap(),
+        Error::InvalidAmount
+    );
+}
+
+/// Shortfall invariant: the shortfall reported by `settle` is exactly
+/// `max(0, settled − locked)`, and equals `authorized − settled` flipped in
+/// sign once settlement exceeds the locked collateral. Verifies the grant's
+/// `locked ≥ authorized − settled` framing across the covered + breached cases.
+#[test]
+fn shortfall_invariant_holds_across_cases() {
+    let (env, c) = setup();
+    let id = aid(&env, 7);
+    let authorized = 100_000_000i128;
+    c.reserve(&id, &authorized, &200);
+
+    // Covered: settled < locked => shortfall 0, and locked >= authorized - settled.
+    let shortfall = c.settle(&id, &70_000_000);
+    assert_eq!(shortfall, 0);
+    let lock = c.get_lock(&id).unwrap();
+    assert!(lock.locked >= lock.authorized - lock.settled);
+
+    // Breach: cumulative settled now exceeds locked => shortfall = settled - locked.
+    let shortfall = c.settle(&id, &50_000_000); // cumulative 120M > 100M locked
+    let lock = c.get_lock(&id).unwrap();
+    assert_eq!(shortfall, lock.settled - lock.locked);
+    assert_eq!(shortfall, 20_000_000);
 }

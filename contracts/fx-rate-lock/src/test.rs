@@ -119,6 +119,77 @@ fn rejects_nonpositive_amounts_and_zero_ttl() {
 }
 
 #[test]
+fn zero_fee_quote_locks_and_consumes() {
+    let (env, c, _admin) = setup();
+    // fee_iof = 0 is valid (fee_iof < 0 is rejected, == 0 is allowed).
+    // Relation with no fee:  sell * SCALE == price * buy.
+    // sell 100.0 USDC (1e9), buy 500.00 BRL (50_000) => price = 1e9 * 1e7 / 50_000 = 200_000_000_000.
+    let sell = 1_000_000_000i128;
+    let buy = 50_000i128;
+    let price = 200_000_000_000i128;
+    let id = qid(&env, 10);
+
+    c.lock_quote(&id, &sell, &buy, &price, &0, &180);
+    assert!(c.is_active(&id));
+    assert_eq!(c.get_quote(&id).unwrap().fee_iof, 0);
+
+    c.consume_quote(&id, &qid(&env, 11));
+    assert!(c.get_quote(&id).unwrap().consumed);
+}
+
+#[test]
+fn expired_quote_is_inactive_but_still_readable_in_grace() {
+    let (env, c, _admin) = setup();
+    let (sell, buy, price, fee) = consistent();
+    let id = qid(&env, 12);
+    let expires = c.lock_quote(&id, &sell, &buy, &price, &fee, &180);
+
+    // Move past expiry but within the 60-ledger storage grace window.
+    env.ledger().set_sequence_number(expires + 30);
+
+    // Not active (expiry guard fired)...
+    assert!(!c.is_active(&id));
+    // ...but the row is still readable so consume returns the precise QuoteExpired.
+    assert!(c.get_quote(&id).is_some());
+    assert_eq!(
+        c.try_consume_quote(&id, &qid(&env, 13))
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::QuoteExpired
+    );
+}
+
+#[test]
+fn rejects_nonpositive_buy_and_price() {
+    let (env, c, _admin) = setup();
+    let (sell, _buy, price, fee) = consistent();
+    let id = qid(&env, 14);
+    assert_eq!(
+        c.try_lock_quote(&id, &sell, &0, &price, &fee, &180)
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::InvalidAmount
+    );
+    assert_eq!(
+        c.try_lock_quote(&id, &sell, &50_000, &0, &fee, &180)
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::InvalidAmount
+    );
+    // Negative IOF is rejected too.
+    assert_eq!(
+        c.try_lock_quote(&id, &sell, &50_000, &price, &-1, &180)
+            .err()
+            .unwrap()
+            .unwrap(),
+        Error::InvalidAmount
+    );
+}
+
+#[test]
 fn consume_unknown_quote_fails() {
     let (env, c, _admin) = setup();
     let err = c
