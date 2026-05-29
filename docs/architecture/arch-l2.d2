@@ -185,10 +185,11 @@ sc: Soroban Contracts (attr + rfq on Mainnet, audited · vault = testnet PoC) {
   vault: |md
     **Card-Collateral Vault**
     **(TESTNET PoC — off critical path)**
-    composes OZ `stellar_accounts::smart_account::SmartAccount`
-    + `policies::spending_limit`
-    + `verifiers::webauthn` / `ed25519`
-    + `stellar_contract_utils::pausable`
+    composes OZ `stellar_contract_utils::pausable`
+    + `stellar_access::access_control`
+    admin-gated reserve / settle / release
+    *(production vault adds OZ `smart_account::SmartAccount`*
+    *+ `policies::spending_limit` + `verifiers::webauthn` / `ed25519`)*
     USDC yield only (never XLM)
   | {class: soroban-poc}
 
@@ -257,7 +258,7 @@ bleu.private.rpc -> sc.vault: "testnet PoC" {style.stroke-dash: 3}
 
 # -- Contract composition --
 sc.attr -> sc.usdc: "transfer_from (SEP-41)"
-sc.vault -> sc.usdc: "transfer_from (allowance, PoC)" {style.stroke-dash: 3}
+sc.vault -> sc.usdc: "transfer_from (allowance, production vault)" {style.stroke-dash: 3}
 
 # -- External --
 bleu.private.ap_sep -> anchor: "upstream SEP-31/38"

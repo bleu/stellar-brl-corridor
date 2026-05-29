@@ -1,8 +1,14 @@
-title: Bleu · Card Authorization — Hybrid Architecture · Testnet PoC (C4 L3 Sequence) {
+title: Bleu · Card Authorization — Hybrid Architecture · Production Vault Design (C4 L3 Sequence) {
   near: top-center
   style.font-size: 28
   style.bold: true
 }
+
+# NOTE: This sequence depicts the PRODUCTION card-collateral vault target
+# (SmartAccount / webauthn / spending-limit policy / USDC settlement, CAP-21/23).
+# The shipped testnet PoC (`contracts/card-collateral-poc`) implements only the
+# admin-gated reserve/settle/release state machine + shortfall accounting,
+# composing OZ `pausable` + `access_control`; it does not call USDC or do_check_auth.
 
 shape: sequence_diagram
 
@@ -11,7 +17,7 @@ merchant: Merchant POS
 network: Card Network\n(Visa / Mastercard)
 issuer: Issuer / BIN Sponsor\n(Monavate-pattern EMI)
 adapter: Card Issuer Adapter\n(Bleu · offchain)
-vault: Card-Collateral Vault\n(Soroban · testnet PoC)
+vault: Card-Collateral Vault\n(Soroban · production vault design)
 usdc: USDC SAC\n(Stellar Mainnet)
 
 # 1. Swipe — offchain card rails
@@ -44,7 +50,7 @@ issuer -> adapter: "18. POST /capture webhook\n(auth_id, final_amount)"
 adapter -> vault: "19. invoke settle(auth_id,\nfinal_amount)"
 vault -> vault: "20. CAP-21 minSeqAge\ncool-down enforced"
 vault -> usdc: "21. transfer → issuer\nsettlement address"
-vault -> adapter: "22. emit (vault, card_bin,\ndirection=debit)\n{amount, merchant_usd, iof}"
+vault -> adapter: "22. emit (card_settle, auth_id,\nfinal_amount)\n+ (shortfall) if breached"
 
 # 6. Refund or unused-auth auto-return
 network -> issuer: "23. refund / expire"
