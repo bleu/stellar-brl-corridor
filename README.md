@@ -93,6 +93,8 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 > Live on **testnet** (deployed 2026-05-29; see [`deployments/testnet.json`](deployments/testnet.json), reproduce with `just deploy-testnet`). Mainnet addresses populate after audit (T3). Testnet USDC SAC: [`CBCIMM65…OH37`](https://stellar.expert/explorer/testnet/contract/CBCIMM652YGFPUJ3YVKJL6LNJGHCU7S22IPQXJWMA2ZC7CRA4Q2XOH37).
 >
 > **Live demo:** all three primitives are demonstrated working on-chain, with reviewer-clickable transaction hashes, in [`docs/DEMO.md`](docs/DEMO.md). Reproduce the full run with `just demo`.
+>
+> **SDK reads live state:** the TypeScript SDK talks to these deployed contracts. Run `just sdk-example` to connect to testnet RPC and print real on-chain `partner-attribution` state (admin / total_bps / sac) — read-only, no funds. See [`sdk/typescript/examples/read-live-testnet.ts`](sdk/typescript/examples/read-live-testnet.ts).
 
 | Contract | Testnet | Mainnet | Block-explorer |
 | --- | --- | --- | --- |

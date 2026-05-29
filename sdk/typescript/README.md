@@ -2,27 +2,54 @@
 
 TypeScript SDK for Bleu's BRL/PIX corridor on Stellar — Anchor Platform + SEP-38 rate-lock + partner attribution.
 
-> **Status: T0 skeleton.** Type surface only. The real client lands in T1, generated from the Soroban contract specs via `stellar contract bindings --language typescript` and thin hand-written wrappers around SEP-31 / SEP-38.
+The contract surface is generated from the **live** Soroban contract specs via
+`stellar contract bindings typescript` (in `src/generated/`) and exposed through
+thin typed clients pointed at the deployed testnet addresses.
 
-## Install
+## Read live testnet state in 20 lines
 
-```bash
-# T0 — not yet on npm. Use the workspace path or git URL until T3.
-npm install ../path/to/stellar-brl-corridor/sdk/typescript
-```
-
-## Quickstart
+This connects to the public testnet RPC and reads real on-chain state from the
+deployed `partner-attribution` contract — read-only simulation calls, no signing,
+no funds:
 
 ```ts
-import { BleuClient } from "@bleu/stellar-brl-corridor-sdk";
+import { readFileSync } from "node:fs";
+import {
+  corridorClients,
+  addressesFromDeployment,
+  type DeploymentFile,
+} from "@bleu/stellar-brl-corridor-sdk";
 
-const client = new BleuClient({
-  rpcUrl: "https://soroban-testnet.stellar.org",
-  anchorDomain: "anchor.example.com",
-  network: "testnet",
+const deployment = JSON.parse(
+  readFileSync("deployments/testnet.json", "utf8"),
+) as DeploymentFile;
+
+const { partnerAttribution } = corridorClients({
+  addresses: addressesFromDeployment(deployment),
 });
 
-console.log(client.ping()); // "ok"
+const { result: admin } = await partnerAttribution.get_admin();
+const { result: totalBps } = await partnerAttribution.total_bps();
+const { result: sac } = await partnerAttribution.sac_address();
+
+console.log({ admin, totalBps, sac });
+// { admin: 'GDWNOIAE…ABYF', totalBps: 5000, sac: 'CBCIMM65…OH37' }
+```
+
+Run the full example (prints live values to the console):
+
+```bash
+npm install && npm run example      # from sdk/typescript
+just sdk-example                    # from the repo root
+```
+
+## Regenerate bindings
+
+Bindings live in `src/generated/<contract>/` and are produced from the deployed
+contracts:
+
+```bash
+just bindings <contract_id> testnet
 ```
 
 ## Develop

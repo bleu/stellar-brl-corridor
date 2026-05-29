@@ -54,6 +54,11 @@ demo run_tag="":
 bindings contract_id network="testnet":
     stellar contract bindings typescript --network {{network}} --contract-id {{contract_id}} --output-dir sdk/typescript/src/generated --overwrite
 
+# Read LIVE testnet state via the TypeScript SDK (read-only; no signing, no funds).
+# Connects to testnet RPC and prints partner-attribution admin / total_bps / sac.
+sdk-example:
+    cd sdk/typescript && npm install && npm run example
+
 # Anchor Platform — bring up local stack against a sandbox anchor
 ap-up:
     docker compose -f anchor-platform/docker-compose.example.yml up
