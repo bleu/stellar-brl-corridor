@@ -90,13 +90,13 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 
 ## Deployed addresses
 
-> Testnet addresses populate as we deploy. Mainnet addresses populate after audit (T3).
+> Live on **testnet** (deployed 2026-05-29; see [`deployments/testnet.json`](deployments/testnet.json), reproduce with `just deploy-testnet`). Mainnet addresses populate after audit (T3). Testnet USDC SAC: [`CBCIMM65…OH37`](https://stellar.expert/explorer/testnet/contract/CBCIMM652YGFPUJ3YVKJL6LNJGHCU7S22IPQXJWMA2ZC7CRA4Q2XOH37).
 
 | Contract | Testnet | Mainnet | Block-explorer |
 | --- | --- | --- | --- |
-| `fx-rate-lock` | `[NEEDS: testnet address]` | `[NEEDS: mainnet address — post-audit]` | `[NEEDS: stellar.expert link]` |
-| `partner-attribution` | `[NEEDS: testnet address]` | `[NEEDS: mainnet address — post-audit]` | `[NEEDS: stellar.expert link]` |
-| `card-collateral-poc` | `[NEEDS: testnet address]` | **testnet PoC only** | `[NEEDS: stellar.expert link]` |
+| `fx-rate-lock` | `CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL) |
+| `partner-attribution` | `CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR) |
+| `card-collateral-poc` | `CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW` | **testnet PoC only** | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW) |
 
 ## Roadmap
 
