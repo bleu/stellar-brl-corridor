@@ -6,6 +6,12 @@
 [![CI](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml/badge.svg)](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+**SCF reviewers:** start with **[`docs/REVIEWERS.md`](docs/REVIEWERS.md)** — verify the deployed contracts, the on-chain demo, the live-reading SDK, and the Anchor Platform in ~60 seconds.
+
+![Bleu SDK reading live partner-attribution state straight off Stellar testnet](docs/media/sdk-live-testnet.gif)
+
+> The SDK above is reading **real on-chain state** from the deployed `partner-attribution` contract on testnet (`just sdk-example`). Nothing mocked.
+
 ## What this is
 
 An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus **two** mainnet-bound Soroban primitives (audit scheduled via the SDF Soroban Audit Bank, pre-mainnet) and a **testnet proof-of-concept** card-collateral smart account. The corridor wraps SEP-31 B2B receive flows with PIX semantics, surfaces BCB-compliant IOF disclosure inside SEP-38 firm quotes, and turns B2B2B distribution economics into on-chain `partner_transfer` events.
@@ -95,6 +101,8 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 > **Live demo:** all three primitives are demonstrated working on-chain, with reviewer-clickable transaction hashes, in [`docs/DEMO.md`](docs/DEMO.md). Reproduce the full run with `just demo`.
 >
 > **SDK reads live state:** the TypeScript SDK talks to these deployed contracts. Run `just sdk-example` to connect to testnet RPC and print real on-chain `partner-attribution` state (admin / total_bps / sac) — read-only, no funds. See [`sdk/typescript/examples/read-live-testnet.ts`](sdk/typescript/examples/read-live-testnet.ts).
+>
+> **Anchor Platform boots today:** the BR-configured Anchor Platform (4.3.0) comes up and serves SEP-1 (`stellar.toml`) + SEP-38 `/info` on testnet — `just ap-up` then `just ap-check`. The SEP-38 quote rate-integration + sandbox-anchor wiring + end-to-end SEP-31 flow land at T1. See [`docs/ANCHOR-PLATFORM.md`](docs/ANCHOR-PLATFORM.md).
 
 | Contract | Testnet | Mainnet | Block-explorer |
 | --- | --- | --- | --- |

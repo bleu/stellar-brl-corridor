@@ -59,12 +59,17 @@ bindings contract_id network="testnet":
 sdk-example:
     cd sdk/typescript && npm install && npm run example
 
-# Anchor Platform — bring up local stack against a sandbox anchor
+# Anchor Platform — bring up the BR-configured local stack (serves SEP-1 + SEP-38 /info)
 ap-up:
-    docker compose -f anchor-platform/docker-compose.example.yml up
+    cd anchor-platform && (cp -n env.example .env || true) && docker compose -f docker-compose.example.yml up -d
 
+# Tear down the Anchor Platform stack + volumes
 ap-down:
-    docker compose -f anchor-platform/docker-compose.example.yml down -v
+    cd anchor-platform && docker compose -f docker-compose.example.yml down -v
+
+# Smoke-check the live Anchor Platform: SEP-1 TOML + SEP-38 /info
+ap-check:
+    curl -s localhost:8080/.well-known/stellar.toml && echo && curl -s localhost:8080/sep38/info
 
 # Clean Rust + Node build outputs
 clean:

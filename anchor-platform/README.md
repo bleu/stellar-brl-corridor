@@ -35,7 +35,7 @@ The compose stack pins:
 - SEP-10 / SEP-12 / SEP-24 / SEP-31 / SEP-38.
 - SEP-31 with `quotes_required=true`.
 - SEP-12 BR custom fields: `cpf`, `cnpj`, `pix_key`, `pix_key_type ∈ {cpf, cnpj, email, phone, evp}`, `bank_ispb`, mirrored to SEP-9 `tax_id` for cross-anchor interop.
-- SEP-38 firm quotes with **IOF disclosure** in `fee.details[]` (`{name: "IOF", description: "Decreto 6.306/2007", amount}`). Bleu emits; the anchor collects at BRL ↔ USDC conversion.
+- SEP-38 firm quotes with an **IOF-ready** `fee.details[]` entry (`{name: "IOF", description: "Decreto 6.306/2007 — anticipatory; not mandated for crypto FX today", amount}`, default `0`). Wired and ready; the anchor would emit/collect if/when IOF applies at BRL ↔ USDC conversion.
 
 The **payout-orchestration glue** (batched USDC SAC `transfer` under `require_auth()` over `Vec<PayoutEntry>` keyed by `(batch_id, cursor)`, fee-bump ×10 retry) lives in the AP business server, not a standalone contract. T1 implementation lands alongside the SEP-31 receive flow.
 
