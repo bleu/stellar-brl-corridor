@@ -1,0 +1,106 @@
+{
+  "network": "testnet",
+  "run": "20260529223640",
+  "ran_at": "2026-05-29T22:37:54Z",
+  "admin": "GDWNOIAEKIWIKL6BSOHNJYJNYAZTVPXAG47G3XZA2ZFPC66Q5LCLABYF",
+  "usdc_sac": "CBCIMM652YGFPUJ3YVKJL6LNJGHCU7S22IPQXJWMA2ZC7CRA4Q2XOH37",
+  "contracts": {
+    "fx-rate-lock": "CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL",
+    "partner-attribution": "CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR",
+    "card-collateral-poc": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW"
+  },
+  "partners": {
+    "a": "GCSFWWYIBAS7KPEF576YX6JWXC6E757QF54YANYITVG5PVEJDYJRRBY3",
+    "b": "GCNU35WY6TC5N6NAV2LBNDKDH5MYQ5FXG5KNUNSCBDXKT4RT75WEJUJR"
+  },
+  "observed": {
+    "partner_a_usdc_delta": "300000000",
+    "partner_b_usdc_delta": "200000000"
+  },
+  "steps": [
+    {
+      "step": "partner.mint",
+      "fn": "mint",
+      "contract": "CBCIMM652YGFPUJ3YVKJL6LNJGHCU7S22IPQXJWMA2ZC7CRA4Q2XOH37",
+      "tx_hash": "53f5e5506c4857888e3c0431de298e5dfd8d3414f7b90967e610fe42e943b1f2",
+      "ret": ""
+    },
+    {
+      "step": "partner.set_a",
+      "fn": "set_partner",
+      "contract": "CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR",
+      "tx_hash": "af79ccd14e41aa2b27920fcba1d876ea19f23df02a25f1783b47b07290ea740a",
+      "ret": "null"
+    },
+    {
+      "step": "partner.set_b",
+      "fn": "set_partner",
+      "contract": "CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR",
+      "tx_hash": "b2331c74a20477ee60577f723ff597b8485fbc13ec5cb9cb1b6bec16de0d1beb",
+      "ret": "null"
+    },
+    {
+      "step": "partner.settle_split",
+      "fn": "settle_split",
+      "contract": "CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR",
+      "tx_hash": "aa141ef9878d3b7a06b309df76cbf526c76d9cb39cb8e8a980e38bae68d9233f",
+      "ret": "500000000"
+    },
+    {
+      "step": "fx.lock_quote",
+      "fn": "lock_quote",
+      "contract": "CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL",
+      "tx_hash": "aa22d19ba34f9708bf5654dbd306f61d7afc9ba744887248c311001da055f635",
+      "ret": "2816812"
+    },
+    {
+      "step": "fx.consume_quote",
+      "fn": "consume_quote",
+      "contract": "CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL",
+      "tx_hash": "90a3e3eff463f358df4c7fdf10759b9776caabbdb929d3f3beb36e154e59112c",
+      "ret": "null"
+    },
+    {
+      "step": "card.reserve",
+      "fn": "reserve",
+      "contract": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW",
+      "tx_hash": "95d55425faab613e0dbaf7a5f4898053cb022652d0c32bd0eb1ed865cf7ca6bd",
+      "ret": "null"
+    },
+    {
+      "step": "card.settle_partial",
+      "fn": "settle",
+      "contract": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW",
+      "tx_hash": "9bd0f64e1b8f3752aed7bc4238508ecc8ac6ceddda449841ca945e3e116c27b8",
+      "ret": "0"
+    },
+    {
+      "step": "card.release",
+      "fn": "release",
+      "contract": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW",
+      "tx_hash": "18412c46229f7ed8cc443c0da33fa2b06575cb2e91f4a53fd7aa7d7478ae2036",
+      "ret": "200000000"
+    },
+    {
+      "step": "card.reserve_short",
+      "fn": "reserve",
+      "contract": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW",
+      "tx_hash": "aea581b6a7522048fce1293841a3ae7a146b5d77117514901815559413d59b1b",
+      "ret": "null"
+    },
+    {
+      "step": "card.settle_shortfall",
+      "fn": "settle",
+      "contract": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW",
+      "tx_hash": "1210d0fa5b0850d617ecd6fe4cf93b865186c650ce717ee4f869b215e630b3f8",
+      "ret": "40000000"
+    },
+    {
+      "step": "card.release_short",
+      "fn": "release",
+      "contract": "CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW",
+      "tx_hash": "18e99f1a04bd5d97c1ff5afdabbdded5e6b95035e438c330262d2e5f69891739",
+      "ret": "0"
+    }
+  ]
+}

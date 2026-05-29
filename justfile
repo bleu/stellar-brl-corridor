@@ -44,6 +44,12 @@ wasm:
 deploy-testnet network="testnet":
     scripts/deploy_testnet.sh {{network}}
 
+# Run the live testnet demo: exercises all three primitives against the deployed
+# contracts and prints a clickable tx hash per step. Requires the stellar CLI +
+# jq. Idempotent; pass a run tag to override the timestamp. See docs/DEMO.md.
+demo run_tag="":
+    scripts/demo_testnet.sh {{run_tag}}
+
 # Generate TypeScript bindings from a deployed contract id.
 bindings contract_id network="testnet":
     stellar contract bindings typescript --network {{network}} --contract-id {{contract_id}} --output-dir sdk/typescript/src/generated --overwrite
