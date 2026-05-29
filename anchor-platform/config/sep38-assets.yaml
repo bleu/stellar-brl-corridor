@@ -1,0 +1,68 @@
+# Bleu BR Anchor Platform — assets config (AP `assets.type=file` format).
+#
+# Status: validated against the AP 4.3.0 image's own assets.yaml schema and
+#   loaded by a live AP container in this environment (see docs/ANCHOR-PLATFORM.md
+#   for what ran live vs. example). Mounted via ASSETS_VALUE (see env.example).
+#
+# Corridor shape:
+#   sell_asset = stellar:USDC:GBBD... (Stellar testnet USDC)
+#   buy_asset  = iso4217:BRL  (off-chain BRL, delivered over PIX)
+#   buy_delivery_method = PIX,  country_code = BR
+#
+# Asset ids:  Stellar -> "stellar:CODE:ISSUER";  off-chain fiat -> "iso4217:CODE".
+
+items:
+  # ---- On-chain leg: USDC (Stellar testnet, Circle issuer) ----
+  - id: stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+    # Anchor's USDC distribution (hot) account on testnet. Placeholder = the
+    # demo signing account; swap for a dedicated distribution account at T1.
+    distribution_account: GC5DJDO5VPVFQC7576GALSLSSA37Q4EA3VEKB7ZSTZ6D3OV3Z2KJOWDT
+    significant_decimals: 7
+    sep31:
+      enabled: true
+      receive:
+        min_amount: 0
+        max_amount: 1000000
+        methods:
+          - PIX
+      quotes_supported: true
+      quotes_required: true
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - iso4217:BRL
+
+  # ---- Off-chain leg: BRL delivered via PIX ----
+  - id: iso4217:BRL
+    significant_decimals: 2
+    sep31:
+      enabled: false
+      receive:
+        min_amount: 0
+        max_amount: 1000000
+        methods:
+          - PIX
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+      country_codes:
+        - BR
+      sell_delivery_methods:
+        - name: PIX
+          description: Receive BRL into the anchor via a PIX transfer.
+      buy_delivery_methods:
+        - name: PIX
+          description: Payout BRL to the recipient's PIX key.
+
+# ---------------------------------------------------------------------------
+# FEE COMPOSITION (informational — NOT read from this file).
+# SEP-38 fee.details[] is produced per-quote by the AP Rate Integration in the
+# business server. Each price/quote response carries:
+#   1. "PIX settlement fee" — anchor's BRL settlement fee (always present).
+#   2. "IOF" — ANTICIPATORY, toggleable. A discrete fee.details[] entry kept so
+#      the response shape is READY IF/WHEN IOF is applied to the crypto FX rail.
+#      It is NOT a mandated charge for crypto / virtual-asset FX in Brazil today.
+#      Default amount "0" (disclosed, not charged) — or omit the entry entirely.
+# See examples/sep38-quote.json and docs/ANCHOR-PLATFORM.md.
+# ---------------------------------------------------------------------------

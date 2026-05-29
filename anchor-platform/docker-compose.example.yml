@@ -7,6 +7,10 @@ services:
     image: stellar/anchor-platform:latest
     container_name: bleu-ap
     restart: unless-stopped
+    # AP needs an explicit start command; with none it prints usage and exits.
+    # --sep-server serves SEP-1/10/12/24/31/38; --platform-server serves the
+    # Platform API consumed by the business server.
+    command: ["--sep-server", "--platform-server"]
     ports:
       - "8080:8080"   # SEP server
       - "8081:8081"   # platform API

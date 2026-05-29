@@ -1,0 +1,13 @@
+# LIVE captures — Anchor Platform 4.3.0, this environment, 2026-05-29T23:03:03Z
+# Stack: docker compose -f docker-compose.example.yml (AP 4.3.0 + postgres:16)
+
+## GET http://localhost:8080/sep38/info  (HTTP 200, served live)
+{"assets":[{"asset":"stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"},{"asset":"iso4217:BRL","country_codes":["BR"],"sell_delivery_methods":[{"name":"PIX","description":"Receive BRL into the anchor via a PIX transfer."}],"buy_delivery_methods":[{"name":"PIX","description":"Payout BRL to the recipient's PIX key."}]}]}
+
+## GET http://localhost:8080/sep38/prices?...&country_code=BR  (rate integration not wired)
+{"error":"Unsupported country code"}
+
+## POST http://localhost:8080/sep38/quote  (requires SEP-10 JWT -> forbidden without auth)
+{
+  "error": "forbidden"
+}

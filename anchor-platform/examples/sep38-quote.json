@@ -1,0 +1,37 @@
+{
+  "_meta": "EXAMPLE response from this config (NOT served live). The live AP stack here serves SEP-1 + SEP-38 /info, but POST /sep38/quote returns 'forbidden' without a SEP-10 JWT and 'service not available' until the Rate Integration callback (business server) is wired — that is the T1 deliverable. This object is the shape that integration will return. Endpoint: POST https://anchor.bleu.builders/sep38/quote (SEP-10 JWT required). Request body in _request below. Numbers (rate 5.42 BRL/USDC, PIX fee 1.50 BRL) are illustrative.",
+  "_request": {
+    "sell_asset": "stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+    "buy_asset": "iso4217:BRL",
+    "sell_amount": "100",
+    "buy_delivery_method": "PIX",
+    "country_code": "BR",
+    "context": "sep31"
+  },
+
+  "id": "de762cb8-1f0a-4e0b-9d9b-2f0a1c3e4f55",
+  "expires_at": "2026-05-29T12:15:00.000000Z",
+  "total_price": "0.1850139",
+  "price": "5.42",
+  "sell_asset": "stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+  "sell_amount": "100",
+  "buy_asset": "iso4217:BRL",
+  "buy_amount": "540.50",
+  "buy_delivery_method": "PIX",
+  "fee": {
+    "total": "1.50",
+    "asset": "iso4217:BRL",
+    "details": [
+      {
+        "name": "PIX settlement fee",
+        "description": "Anchor fee for settling BRL via PIX.",
+        "amount": "1.50"
+      },
+      {
+        "name": "IOF",
+        "description": "Decreto 6.306/2007 — anticipatory; not mandated for crypto FX today",
+        "amount": "0"
+      }
+    ]
+  }
+}

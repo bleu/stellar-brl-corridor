@@ -1,0 +1,21 @@
+{
+  "_meta": "SERVED LIVE by AP 4.3.0 in this environment at GET http://localhost:8080/sep38/info (HTTP 200). Live capture: anchor-platform/examples/live/sep38-live-capture.txt. This file is the pretty-printed equivalent. Production endpoint: GET https://anchor.bleu.builders/sep38/info",
+  "assets": [
+    {
+      "asset": "stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+      "country_codes": ["BR"],
+      "sell_delivery_methods": [],
+      "buy_delivery_methods": []
+    },
+    {
+      "asset": "iso4217:BRL",
+      "country_codes": ["BR"],
+      "sell_delivery_methods": [
+        { "name": "PIX", "description": "Receive BRL into the anchor via a PIX transfer." }
+      ],
+      "buy_delivery_methods": [
+        { "name": "PIX", "description": "Payout BRL to the recipient's PIX key." }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "_meta": "EXAMPLE response (NOT served live). The live AP stack here returns 'service not available' for /prices until the Rate Integration callback (business server, T1) is wired. This is the shape it will return. Endpoint: GET https://anchor.bleu.builders/sep38/prices?sell_asset=stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5&sell_amount=100&buy_delivery_method=PIX&country_code=BR . Rate (1 USDC = 5.42 BRL) is illustrative, not a live oracle price.",
+  "buy_assets": [
+    {
+      "asset": "iso4217:BRL",
+      "price": "5.42",
+      "decimals": 2
+    }
+  ]
+}

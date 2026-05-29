@@ -1,0 +1,62 @@
+# Bleu BR Anchor Platform — SEP-1 stellar.toml (CONCRETE, testnet-configured)
+#
+# Status: reference/example config (validated TOML; NOT served live by AP in this
+#   environment — Docker is not available here, so the AP stack was not brought up).
+#   To go live: publish this file at
+#     https://anchor.bleu.builders/.well-known/stellar.toml
+#   served with `Access-Control-Allow-Origin: *` and `Content-Type: text/plain`.
+#
+# Network: Stellar TESTNET.
+# Domain (configured placeholder): anchor.bleu.builders — swap for the
+#   BR-licensed anchor's real domain at T1 (see README §Notes).
+#
+# SIGNING_KEY / ACCOUNTS below is a REAL testnet public key generated with
+#   `stellar keys generate` (alias bleu-ap-demo) for this artifact. The matching
+#   secret seed is intentionally NOT committed; it lives only in .env
+#   (SEP10_SIGNING_SEED). Rotate to a dedicated mainnet account for production.
+
+VERSION = "0.0.1"
+NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
+ACCOUNTS = ["GC5DJDO5VPVFQC7576GALSLSSA37Q4EA3VEKB7ZSTZ6D3OV3Z2KJOWDT"]
+SIGNING_KEY = "GC5DJDO5VPVFQC7576GALSLSSA37Q4EA3VEKB7ZSTZ6D3OV3Z2KJOWDT"
+
+# ---------- SEP endpoints ----------
+TRANSFER_SERVER_SEP0024 = "https://anchor.bleu.builders/sep24"
+DIRECT_PAYMENT_SERVER   = "https://anchor.bleu.builders/sep31"   # SEP-31 cross-border
+ANCHOR_QUOTE_SERVER     = "https://anchor.bleu.builders/sep38"   # SEP-38 firm quotes
+WEB_AUTH_ENDPOINT       = "https://anchor.bleu.builders/auth"    # SEP-10
+KYC_SERVER              = "https://anchor.bleu.builders/sep12"   # SEP-12 KYC
+
+# ---------- Currencies ----------
+[[CURRENCIES]]
+code = "USDC"
+# Circle-issued USDC on Stellar TESTNET (well-known issuer).
+issuer = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"
+display_decimals = 7
+status = "test"
+is_asset_anchored = true
+anchor_asset_type = "fiat"
+anchor_asset = "USD"
+name = "USD Coin"
+desc = "Circle-issued USDC, native on Stellar (testnet issuer)."
+
+[[CURRENCIES]]
+code = "BRL"
+# Off-chain BRL — settled via PIX through the BR-licensed anchor, not an
+# on-chain asset. `issuer` is intentionally omitted; the SEP-38 quote server
+# references BRL as `iso4217:BRL`.
+status = "test"
+is_asset_anchored = true
+anchor_asset_type = "fiat"
+anchor_asset = "BRL"
+display_decimals = 2
+name = "Brazilian Real"
+desc = "Off-chain BRL settled via PIX through the BR-licensed anchor (iso4217:BRL in SEP-38)."
+
+# ---------- Documentation ----------
+[DOCUMENTATION]
+ORG_NAME = "Bleu LTDA"
+ORG_URL = "https://bleu.builders"
+ORG_DESCRIPTION = "BRL/PIX corridor on Stellar — open-source, MIT."
+ORG_TWITTER = "bleubuilders"
+ORG_OFFICIAL_EMAIL = "hello@bleu.builders"

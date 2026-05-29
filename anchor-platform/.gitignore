@@ -1,0 +1,5 @@
+# Local runtime files — generated when bringing up the stack, never committed.
+.env
+# The live AP run is pointed directly at config/sep1-stellar.toml (via
+# SEP1_TOML_VALUE), so this copy is only for the README's older `cp` quickstart.
+config/stellar.toml
