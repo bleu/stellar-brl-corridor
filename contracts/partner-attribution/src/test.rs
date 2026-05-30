@@ -1,10 +1,28 @@
 #![cfg(test)]
 use super::*;
 use soroban_sdk::{
-    testutils::Address as _,
+    testutils::{Address as _, Events as _},
     token::{StellarAssetClient, TokenClient},
-    vec, Address, BytesN, Env, Symbol,
+    vec,
+    xdr::{ContractEventBody, ScSymbol, ScVal},
+    Address, BytesN, Env, Symbol,
 };
+
+/// Count `partner_transfer` events emitted by `contract`. Matches on the first
+/// topic Symbol, which the `#[contractevent]` macro derives from the struct name.
+fn partner_transfer_count(env: &Env, contract: &Address) -> usize {
+    let want = ScVal::Symbol(ScSymbol("partner_transfer".try_into().unwrap()));
+    env.events()
+        .all()
+        .filter_by_contract(contract)
+        .events()
+        .iter()
+        .filter(|e| {
+            let ContractEventBody::V0(body) = &e.body;
+            body.topics.first() == Some(&want)
+        })
+        .count()
+}
 
 /// Register the contract over a real Stellar Asset Contract (the USDC SAC
 /// archetype), funding a payer with 100 USDC. Returns the env, contract client,
@@ -149,11 +167,47 @@ fn settle_split_moves_real_balance_to_partners() {
         &BytesN::from_array(&env, &[7u8; 32]),
     );
 
+    // Both partners moved balance, so exactly two `partner_transfer` events.
+    // Snapshot the event count right after the split, before any later contract
+    // call (e.g. `token.balance`) resets the test env's event buffer.
+    assert_eq!(partner_transfer_count(&env, &c.address), 2);
+
     // 30% + 20% of 10 USDC = 3 + 2 = 5 USDC moved; residual stays with `from`.
     assert_eq!(token.balance(&p1), 30_000_000); // 3 USDC
     assert_eq!(token.balance(&p2), 20_000_000); // 2 USDC
     assert_eq!(total_paid, 50_000_000); // 5 USDC
     assert_eq!(token.balance(&from), 1_000_000_000 - 50_000_000); // residual
+}
+
+/// A partner whose share rounds (or is configured) to zero must NOT emit a
+/// phantom `partner_transfer`: no balance moves, so no transfer event. Here a
+/// 0-bps partner is settled alongside a paying one — only the paying partner's
+/// event is emitted.
+#[test]
+fn zero_share_partner_emits_no_transfer_event() {
+    let (env, c, from, token) = setup();
+    let paid = Address::generate(&env);
+    let zero = Address::generate(&env);
+    c.set_partner(&paid, &3000, &paid, &dom(&env)); // 30%
+    c.set_partner(&zero, &0, &zero, &dom(&env)); // 0% — share is always 0
+
+    let amount = 100_000_000i128; // 10 USDC
+    let total_paid = c.settle_split(
+        &from,
+        &amount,
+        &vec![&env, paid.clone(), zero.clone()],
+        &BytesN::from_array(&env, &[8u8; 32]),
+    );
+
+    // Exactly one `partner_transfer` — the zero-share partner emits none.
+    // Read events right after the split, before any later contract call resets
+    // the test env's event buffer.
+    assert_eq!(partner_transfer_count(&env, &c.address), 1);
+
+    // Only the 30% partner is paid; the zero-bps partner gets nothing.
+    assert_eq!(token.balance(&paid), 30_000_000);
+    assert_eq!(token.balance(&zero), 0);
+    assert_eq!(total_paid, 30_000_000);
 }
 
 #[test]

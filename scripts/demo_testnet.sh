@@ -61,11 +61,14 @@ invoke() {
   local out hash ret errfile
   errfile="$(mktemp)"
   # --send=yes forces a real on-chain submission. The CLI prints the tx hash to
-  # stderr; we capture stderr to a file (also echoing it) and grep the 64-hex.
+  # stderr on a dedicated line ("Transaction hash is <64-hex>"). Anchor the grep
+  # to that line so we never pick up some other 64-hex (e.g. a contract id or the
+  # "Signing transaction:" line) that happens to scroll by first.
   out="$(stellar contract invoke --id "$cid" --source "$SOURCE" --network "$NETWORK" \
           --send=yes -- "$fn" "$@" 2>"$errfile")"
   cat "$errfile" >&2
-  hash="$(grep -Eo '[0-9a-f]{64}' "$errfile" | head -1 || true)"
+  hash="$(grep -Eo 'Transaction hash is [0-9a-f]{64}' "$errfile" \
+            | grep -Eo '[0-9a-f]{64}' | head -1 || true)"
   rm -f "$errfile"
   # Strip surrounding JSON quotes so i128 returns ("200000000") compare as ints.
   ret="$(printf '%s' "$out" | tr -d '"')"
@@ -87,6 +90,15 @@ read_call() {
     -- "$fn" "$@" 2>/dev/null | tr -d '"'
 }
 
+# assert_eq <actual> <expected> <message>  → exits 1 with context on mismatch.
+assert_eq() {
+  local actual="$1" expected="$2" msg="$3"
+  if [ "$actual" != "$expected" ]; then
+    echo "  !! $msg (got '$actual', expected '$expected')" >&2
+    exit 1
+  fi
+}
+
 # --- Helper identities -------------------------------------------------------
 ensure_key() {
   local name="$1"
@@ -104,8 +116,22 @@ ensure_key() {
 ensure_trust() {
   local name="$1"
   echo "› Ensuring USDC trustline for '$name'" >&2
-  stellar tx new change-trust --source-account "$name" --network "$NETWORK" \
-    --line "USDC:$ADMIN" >&2 2>&1 || true
+  # change-trust on an existing line is a no-op, but the CLI exits non-zero with
+  # a "trust line already exists" style message. Capture output and only swallow
+  # that benign case; surface any other failure (set -e would otherwise mask it
+  # behind a bare `|| true`).
+  local ct_out ct_rc
+  ct_out="$(stellar tx new change-trust --source-account "$name" --network "$NETWORK" \
+    --line "USDC:$ADMIN" 2>&1)" && ct_rc=0 || ct_rc=$?
+  printf '%s\n' "$ct_out" >&2
+  if [ "$ct_rc" -ne 0 ]; then
+    if printf '%s' "$ct_out" | grep -qiE 'already exists|op_low_reserve|low reserve|trust.?line.*exist'; then
+      echo "  (trustline already present — ignoring)" >&2
+    else
+      echo "  !! change-trust failed for '$name'" >&2
+      return "$ct_rc"
+    fi
+  fi
 }
 
 PARTNER_A="$(ensure_key demo-partner-a)"
@@ -155,7 +181,7 @@ invoke "partner.set_b" set_partner "$PA" -- \
 
 TOTAL_BPS="$(read_call total_bps "$PA" --)"
 echo "  total_bps after registration: $TOTAL_BPS (expect 5000)"
-[ "$TOTAL_BPS" = "5000" ] || { echo "  !! total_bps assertion failed" >&2; exit 1; }
+assert_eq "$TOTAL_BPS" "5000" "total_bps after registration"
 
 # Settle a 100 USDC flow split across both partners.
 SETTLE_AMT=1000000000   # 100.0000000 USDC
@@ -174,8 +200,8 @@ DELTA_A=$(( BAL_A_AFTER - BAL_A_BEFORE ))
 DELTA_B=$(( BAL_B_AFTER - BAL_B_BEFORE ))
 echo "  partner A USDC delta: $DELTA_A (expect 300000000)"
 echo "  partner B USDC delta: $DELTA_B (expect 200000000)"
-[ "$DELTA_A" = "300000000" ] || { echo "  !! partner A delta assertion failed" >&2; exit 1; }
-[ "$DELTA_B" = "200000000" ] || { echo "  !! partner B delta assertion failed" >&2; exit 1; }
+assert_eq "$DELTA_A" "300000000" "partner A USDC delta"
+assert_eq "$DELTA_B" "200000000" "partner B USDC delta"
 echo "  ✓ partner balances moved exactly as split; partner_transfer events emitted."
 echo
 
@@ -212,14 +238,14 @@ invoke "fx.lock_quote" lock_quote "$FX" -- \
 
 ACTIVE="$(read_call is_active "$FX" -- --quote_id "$QUOTE_ID")"
 echo "  is_active after lock: $ACTIVE (expect true)"
-[ "$ACTIVE" = "true" ] || { echo "  !! quote not active after lock" >&2; exit 1; }
+assert_eq "$ACTIVE" "true" "quote not active after lock"
 
 invoke "fx.consume_quote" consume_quote "$FX" -- \
   --quote_id "$QUOTE_ID" --sep31_tx_id "$SEP31_TX"
 
 ACTIVE2="$(read_call is_active "$FX" -- --quote_id "$QUOTE_ID")"
 echo "  is_active after consume: $ACTIVE2 (expect false — replay guard set)"
-[ "$ACTIVE2" = "false" ] || { echo "  !! quote still active after consume" >&2; exit 1; }
+assert_eq "$ACTIVE2" "false" "quote still active after consume"
 echo "  ✓ quote_use event emitted; one-shot consumed flag set (double-settle blocked)."
 echo "  Note: the TTL-expiry path (QuoteExpired after the rate-lock window) is not"
 echo "        re-demonstrated live here because waiting ~120 ledgers (~10 min) is"
@@ -240,16 +266,16 @@ AUTH_OK="$(hex32 "auth-ok-$RUN")"
 RESERVE_AMT=500000000   # 50.0000000 USDC
 SETTLE_PARTIAL=300000000 # 30.0000000 USDC
 invoke "card.reserve" reserve "$CARD" -- \
-  --auth_id "$AUTH_OK" --amount "$RESERVE_AMT" --ttl_ledgers 600
+  --auth_id "$AUTH_OK" --amount "$RESERVE_AMT"
 
 invoke "card.settle_partial" settle "$CARD" -- \
   --auth_id "$AUTH_OK" --final_amount "$SETTLE_PARTIAL"
 echo "  settle returned shortfall: $LAST_RET (expect 0 — fully covered)"
-[ "$LAST_RET" = "0" ] || { echo "  !! expected zero shortfall on covered settle" >&2; exit 1; }
+assert_eq "$LAST_RET" "0" "expected zero shortfall on covered settle"
 
 invoke "card.release" release "$CARD" -- --auth_id "$AUTH_OK"
 echo "  release returned unused remainder: $LAST_RET (expect 200000000 = 20 USDC)"
-[ "$LAST_RET" = "200000000" ] || { echo "  !! release remainder assertion failed" >&2; exit 1; }
+assert_eq "$LAST_RET" "200000000" "release remainder"
 echo "  ✓ collateral_locked → card_settle → collateral_released; only spent slice consumed."
 echo
 
@@ -258,12 +284,12 @@ AUTH_SHORT="$(hex32 "auth-short-$RUN")"
 RESERVE_SHORT=100000000  # 10.0000000 USDC
 SETTLE_OVER=140000000    # 14.0000000 USDC (auth/clearing race)
 invoke "card.reserve_short" reserve "$CARD" -- \
-  --auth_id "$AUTH_SHORT" --amount "$RESERVE_SHORT" --ttl_ledgers 600
+  --auth_id "$AUTH_SHORT" --amount "$RESERVE_SHORT"
 
 invoke "card.settle_shortfall" settle "$CARD" -- \
   --auth_id "$AUTH_SHORT" --final_amount "$SETTLE_OVER"
 echo "  settle returned shortfall: $LAST_RET (expect 40000000 = 4 USDC over locked)"
-[ "$LAST_RET" = "40000000" ] || { echo "  !! shortfall amount assertion failed" >&2; exit 1; }
+assert_eq "$LAST_RET" "40000000" "shortfall amount"
 echo "  ✓ shortfall event emitted for the auth/clearing race (off-chain top-up signal)."
 
 # Clean up the shortfall auth so re-runs with the same tag don't trip AuthAlreadyExists.

@@ -13,8 +13,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-# OZ audited ledger-sequence expiry helper for the SEP-38 quote rate-lock check.
-stellar-fee-abstraction = { workspace = true }
+# OZ audited access control + derive macros gating the quote lock/consume ops.
+stellar-access = { workspace = true }
+stellar-macros = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

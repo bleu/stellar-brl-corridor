@@ -27,34 +27,3 @@ export type {
   CorridorClientOptions,
   DeploymentFile,
 } from "./contracts.js";
-
-/**
- * Stellar network the client targets.
- */
-export type Network = "testnet" | "mainnet";
-
-/**
- * Configuration for {@link BleuClient}.
- */
-export interface BleuClientConfig {
-  /** Stellar RPC URL (Soroban RPC JSON-RPC endpoint). */
-  readonly rpcUrl: string;
-  /** Anchor domain that publishes SEP-1 `stellar.toml`. */
-  readonly anchorDomain: string;
-  /** Network the RPC connects to. */
-  readonly network: Network;
-}
-
-/**
- * Bleu corridor client.
- *
- * T0 ships the type surface only; transport implementations land in T1.
- */
-export class BleuClient {
-  constructor(public readonly config: BleuClientConfig) {}
-
-  /** Liveness probe used by CI. */
-  ping(): "ok" {
-    return "ok";
-  }
-}

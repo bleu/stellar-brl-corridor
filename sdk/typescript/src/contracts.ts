@@ -5,7 +5,8 @@
  * deployed testnet contract addresses. The addresses live in one place —
  * {@link CorridorAddresses} — so the SDK, examples and tests never hardcode a
  * contract id in more than one spot. The canonical on-chain source of truth is
- * `deployments/testnet.json` at the repo root; {@link readDeployments} loads it.
+ * `deployments/testnet.json` at the repo root; {@link addressesFromDeployment}
+ * maps a parsed deployment file into {@link CorridorAddresses}.
  *
  * @packageDocumentation
  */

@@ -15,19 +15,21 @@
 //! licensed anchor collects it at conversion — this contract only discloses it
 //! and binds it to the locked rate.
 //!
-//! The lock lifecycle composes OpenZeppelin's audited
-//! `stellar_fee_abstraction::validate_expiration_ledger` (stellar-contracts
-//! =0.7.1) for the ledger-sequence rate-lock deadline check, rather than a
-//! hand-rolled comparison. This module owns the remaining novel surface: the
-//! SEP-38 quote hashing, price invariant, Temporary-storage lifecycle, and the
+//! Admin auth composes OpenZeppelin's audited `stellar_access::access_control`
+//! (stellar-contracts =0.7.1), matching the sibling contracts: `lock_quote` and
+//! `consume_quote` are gated `#[only_admin]`. This module owns the novel
+//! surface: the SEP-38 quote hashing, the price invariant, the Temporary-storage
+//! lifecycle, the typed `QuoteExpired` rate-lock deadline check, and the
 //! `quote_use` settlement event.
 
 #![no_std]
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, Address, BytesN, Env,
+    Symbol, Vec,
 };
-use stellar_fee_abstraction::validate_expiration_ledger;
+use stellar_access::access_control::{self as access_control, AccessControl};
+use stellar_macros::only_admin;
 
 /// Fixed-point scale for `price` (7 dp, matching Stellar asset precision).
 const PRICE_SCALE: i128 = 10_000_000;
@@ -42,7 +44,13 @@ const EXPIRY_GRACE_LEDGERS: u32 = 60;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
+    // `AlreadyInitialized` / `NotInitialized` are retained for ABI stability:
+    // their discriminants are part of the published contract error enum and
+    // renumbering or removing them is an ABI break. Admin lifecycle errors now
+    // surface through OZ access control, so these are unused here.
+    #[allow(dead_code)]
     AlreadyInitialized = 1,
+    #[allow(dead_code)]
     NotInitialized = 2,
     QuoteNotFound = 3,
     QuoteExpired = 4,
@@ -70,7 +78,6 @@ pub struct Quote {
 #[contracttype]
 #[derive(Clone)]
 enum DataKey {
-    Admin,
     Quote(BytesN<32>),
 }
 
@@ -101,15 +108,17 @@ pub struct RateLock;
 #[contractimpl]
 impl RateLock {
     /// Initialize with the admin (the anchor's business server) that may lock
-    /// and consume quotes.
+    /// and consume quotes. Admin gating is delegated to OZ access control.
     pub fn __constructor(env: Env, admin: Address) {
-        env.storage().instance().set(&DataKey::Admin, &admin);
+        access_control::set_admin(&env, &admin);
     }
 
-    /// Lock a firm quote until `now + ttl_ledgers`. Admin-authenticated.
+    /// Lock a firm quote until `now + ttl_ledgers`. Admin-gated via OZ access
+    /// control.
     ///
     /// Stores the quote in Temporary storage and re-derives the SEP-38 price
     /// relation before persisting; an inconsistent quote traps.
+    #[only_admin]
     pub fn lock_quote(
         env: Env,
         quote_id: BytesN<32>,
@@ -119,8 +128,6 @@ impl RateLock {
         fee_iof: i128,
         ttl_ledgers: u32,
     ) -> Result<u32, Error> {
-        Self::admin(&env)?.require_auth();
-
         if sell_amount <= 0 || buy_amount <= 0 || price <= 0 || fee_iof < 0 {
             return Err(Error::InvalidAmount);
         }
@@ -162,14 +169,14 @@ impl RateLock {
     }
 
     /// Consume a locked quote at settlement, binding it to a SEP-31 transaction.
-    /// Fails if the quote is missing, expired, or already consumed.
+    /// Fails if the quote is missing, expired, or already consumed. Admin-gated
+    /// via OZ access control.
+    #[only_admin]
     pub fn consume_quote(
         env: Env,
         quote_id: BytesN<32>,
         sep31_tx_id: BytesN<32>,
     ) -> Result<(), Error> {
-        Self::admin(&env)?.require_auth();
-
         let key = DataKey::Quote(quote_id.clone());
         let mut quote: Quote = env
             .storage()
@@ -178,16 +185,12 @@ impl RateLock {
             .ok_or(Error::QuoteNotFound)?;
 
         // Rate-lock deadline: the quote is live while
-        // `now < expires_at_ledger`, i.e. the last valid ledger is
-        // `expires_at_ledger - 1`. We translate the boundary to a typed
-        // `QuoteExpired` for clients, then route the authoritative check
-        // through OZ's audited `validate_expiration_ledger`, which panics
-        // unless `last_valid_ledger >= now` — keeping the two in lockstep.
-        let last_valid_ledger = quote.expires_at_ledger.saturating_sub(1);
-        if env.ledger().sequence() > last_valid_ledger {
+        // `now < expires_at_ledger`, so the last valid ledger is
+        // `expires_at_ledger - 1`. We return a typed `QuoteExpired` the instant
+        // the current ledger reaches `expires_at_ledger`.
+        if env.ledger().sequence() >= quote.expires_at_ledger {
             return Err(Error::QuoteExpired);
         }
-        validate_expiration_ledger(&env, last_valid_ledger);
         if quote.consumed {
             return Err(Error::QuoteAlreadyConsumed);
         }
@@ -223,13 +226,6 @@ impl RateLock {
         }
     }
 
-    fn admin(env: &Env) -> Result<Address, Error> {
-        env.storage()
-            .instance()
-            .get(&DataKey::Admin)
-            .ok_or(Error::NotInitialized)
-    }
-
     /// SEP-38 §Price Formulas: `sell_amount − fee == price · buy_amount`,
     /// evaluated in `PRICE_SCALE` fixed-point. Traps on mismatch or overflow.
     fn check_price_invariant(
@@ -247,6 +243,11 @@ impl RateLock {
         Ok(())
     }
 }
+
+// Expose the audited OZ AccessControl interface (grant/revoke roles, admin
+// transfer, queries) so role administration is on-chain and standard.
+#[contractimpl(contracttrait)]
+impl AccessControl for RateLock {}
 
 #[cfg(test)]
 mod test;

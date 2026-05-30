@@ -18,7 +18,7 @@ fn aid(env: &Env, b: u8) -> BytesN<32> {
 fn reserve_settle_partial_then_release_returns_remainder() {
     let (env, c) = setup();
     let id = aid(&env, 1);
-    c.reserve(&id, &100_000_000, &200);
+    c.reserve(&id, &100_000_000);
 
     let shortfall = c.settle(&id, &60_000_000);
     assert_eq!(shortfall, 0);
@@ -32,7 +32,7 @@ fn reserve_settle_partial_then_release_returns_remainder() {
 fn settlement_exceeding_locked_flags_shortfall() {
     let (env, c) = setup();
     let id = aid(&env, 2);
-    c.reserve(&id, &100_000_000, &200);
+    c.reserve(&id, &100_000_000);
 
     // Auth/clearing race: clearing comes in above the locked amount.
     let shortfall = c.settle(&id, &130_000_000);
@@ -47,7 +47,7 @@ fn settlement_exceeding_locked_flags_shortfall() {
 fn cumulative_settles_accumulate() {
     let (env, c) = setup();
     let id = aid(&env, 3);
-    c.reserve(&id, &100_000_000, &200);
+    c.reserve(&id, &100_000_000);
     assert_eq!(c.settle(&id, &40_000_000), 0);
     assert_eq!(c.settle(&id, &40_000_000), 0);
     let lock = c.get_lock(&id).unwrap();
@@ -59,8 +59,8 @@ fn cumulative_settles_accumulate() {
 fn double_reserve_same_auth_rejected() {
     let (env, c) = setup();
     let id = aid(&env, 4);
-    c.reserve(&id, &100, &200);
-    let err = c.try_reserve(&id, &100, &200).err().unwrap().unwrap();
+    c.reserve(&id, &100);
+    let err = c.try_reserve(&id, &100).err().unwrap().unwrap();
     assert_eq!(err, Error::AuthAlreadyExists);
 }
 
@@ -83,12 +83,7 @@ fn rejects_nonpositive_reserve() {
     let (env, c) = setup();
     let id = aid(&env, 5);
     assert_eq!(
-        c.try_reserve(&id, &0, &200).err().unwrap().unwrap(),
-        Error::InvalidAmount
-    );
-    // Zero TTL is rejected as well.
-    assert_eq!(
-        c.try_reserve(&id, &100, &0).err().unwrap().unwrap(),
+        c.try_reserve(&id, &0).err().unwrap().unwrap(),
         Error::InvalidAmount
     );
 }
@@ -97,7 +92,7 @@ fn rejects_nonpositive_reserve() {
 fn settle_rejects_negative_final_amount() {
     let (env, c) = setup();
     let id = aid(&env, 6);
-    c.reserve(&id, &100_000_000, &200);
+    c.reserve(&id, &100_000_000);
     assert_eq!(
         c.try_settle(&id, &-1).err().unwrap().unwrap(),
         Error::InvalidAmount
@@ -113,7 +108,7 @@ fn shortfall_invariant_holds_across_cases() {
     let (env, c) = setup();
     let id = aid(&env, 7);
     let authorized = 100_000_000i128;
-    c.reserve(&id, &authorized, &200);
+    c.reserve(&id, &authorized);
 
     // Covered: settled < locked => shortfall 0, and locked >= authorized - settled.
     let shortfall = c.settle(&id, &70_000_000);
@@ -137,14 +132,14 @@ fn pause_blocks_reserve_but_allows_wind_down() {
 
     // Open an authorization while unpaused.
     let id1 = aid(&env, 30);
-    c.reserve(&id1, &100_000_000, &200);
+    c.reserve(&id1, &100_000_000);
     assert!(!c.paused());
 
     // Pause: the circuit breaker stops the vault taking on NEW collateral.
     c.pause(&caller);
     assert!(c.paused());
     let id2 = aid(&env, 31);
-    let err = c.try_reserve(&id2, &100_000_000, &200);
+    let err = c.try_reserve(&id2, &100_000_000);
     assert!(err.is_err(), "reserve must be rejected while paused");
 
     // ...but open authorizations can still be settled and released to wind down.
@@ -156,6 +151,6 @@ fn pause_blocks_reserve_but_allows_wind_down() {
     // Unpause restores normal operation.
     c.unpause(&caller);
     assert!(!c.paused());
-    c.reserve(&id2, &50_000_000, &200);
+    c.reserve(&id2, &50_000_000);
     assert_eq!(c.get_lock(&id2).unwrap().locked, 50_000_000);
 }

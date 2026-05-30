@@ -125,7 +125,7 @@ impl PartnerAttribution {
         let prev = Self::partner(&env, &partner)
             .map(|p| p.fee_bps)
             .unwrap_or(0);
-        let total = Self::total_bps(env.clone());
+        let total = Self::total_bps_of(&env);
         let new_total = total
             .checked_sub(prev)
             .and_then(|t| t.checked_add(fee_bps))
@@ -159,7 +159,7 @@ impl PartnerAttribution {
     pub fn remove_partner(env: Env, partner: Address) -> Result<(), Error> {
         let existing = Self::partner(&env, &partner).ok_or(Error::PartnerNotFound)?;
 
-        let total = Self::total_bps(env.clone());
+        let total = Self::total_bps_of(&env);
         let new_total = total.saturating_sub(existing.fee_bps);
         env.storage()
             .persistent()
@@ -182,9 +182,11 @@ impl PartnerAttribution {
     /// reverts the whole settlement.
     ///
     /// Returns the total amount transferred to partners (the residual stays with
-    /// `from`). Rejects if the partners' combined bps would move more than
-    /// `amount` (defense in depth on top of the per-write `Σ bps ≤ 10_000`
-    /// invariant).
+    /// `from`). The per-call `total_bps_used` accumulator is a duplicate-partner
+    /// guard: the global `Σ bps ≤ 10_000` registry invariant already bounds the
+    /// sum over *distinct* partners, so the running cap here exists to reject a
+    /// `partners` list that names the same partner twice (which would otherwise
+    /// double-pay and overshoot 100%).
     #[only_admin]
     pub fn settle_split(
         env: Env,
@@ -222,17 +224,20 @@ impl PartnerAttribution {
                 // and emits a standard token `transfer` event wallets can see.
                 token.transfer(&from, &p.payout, &share);
                 total_paid = total_paid.checked_add(share).ok_or(Error::Overflow)?;
-            }
 
-            PartnerTransfer {
-                partner: partner.clone(),
-                anchor_asset: sac.clone(),
-                amount,
-                fee_bps: p.fee_bps,
-                fee: share,
-                tx_hash: tx_hash.clone(),
+                // Only emit a `partner_transfer` when balance actually moved; a
+                // zero-value share (rounding to 0, or a 0-bps partner) is not a
+                // transfer and must not surface as a phantom event.
+                PartnerTransfer {
+                    partner: partner.clone(),
+                    anchor_asset: sac.clone(),
+                    amount,
+                    fee_bps: p.fee_bps,
+                    fee: share,
+                    tx_hash: tx_hash.clone(),
+                }
+                .publish(&env);
             }
-            .publish(&env);
         }
 
         Ok(total_paid)
@@ -242,16 +247,24 @@ impl PartnerAttribution {
         Self::partner(&env, &partner)
     }
 
+    /// The running `Σ bps` across all registered partners. Thin caller over the
+    /// `&Env` helper used internally.
     pub fn total_bps(env: Env) -> u32 {
-        env.storage()
-            .instance()
-            .get(&DataKey::TotalBps)
-            .unwrap_or(0)
+        Self::total_bps_of(&env)
     }
 
     /// The wrapped USDC SAC address.
     pub fn sac_address(env: Env) -> Address {
         get_sac_address(&env)
+    }
+
+    /// Read the running `Σ bps` without cloning the `Env`. Internal callers use
+    /// this; the public `total_bps` getter forwards to it.
+    fn total_bps_of(env: &Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::TotalBps)
+            .unwrap_or(0)
     }
 
     fn partner(env: &Env, partner: &Address) -> Option<Partner> {

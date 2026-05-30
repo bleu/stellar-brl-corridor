@@ -59,7 +59,6 @@ pub struct CardLock {
     pub authorized: i128,
     pub locked: i128,
     pub settled: i128,
-    pub expires_at_ledger: u32,
 }
 
 #[contracttype]
@@ -75,7 +74,6 @@ pub struct CollateralLocked {
     #[topic]
     pub auth_id: BytesN<32>,
     pub amount: i128,
-    pub expires_at_ledger: u32,
 }
 
 /// Emitted when an authorization clears. Topic: `card_settle`, auth_id.
@@ -122,39 +120,23 @@ impl CardCollateral {
     /// the circuit breaker stops the vault from taking on new collateral.
     #[only_admin]
     #[when_not_paused]
-    pub fn reserve(
-        env: Env,
-        auth_id: BytesN<32>,
-        amount: i128,
-        ttl_ledgers: u32,
-    ) -> Result<(), Error> {
-        if amount <= 0 || ttl_ledgers == 0 {
+    pub fn reserve(env: Env, auth_id: BytesN<32>, amount: i128) -> Result<(), Error> {
+        if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
         let key = DataKey::Lock(auth_id.clone());
         if env.storage().persistent().has(&key) {
             return Err(Error::AuthAlreadyExists);
         }
-        let expires_at_ledger = env
-            .ledger()
-            .sequence()
-            .checked_add(ttl_ledgers)
-            .ok_or(Error::Overflow)?;
         env.storage().persistent().set(
             &key,
             &CardLock {
                 authorized: amount,
                 locked: amount,
                 settled: 0,
-                expires_at_ledger,
             },
         );
-        CollateralLocked {
-            auth_id,
-            amount,
-            expires_at_ledger,
-        }
-        .publish(&env);
+        CollateralLocked { auth_id, amount }.publish(&env);
         Ok(())
     }
 

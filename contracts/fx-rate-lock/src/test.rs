@@ -189,22 +189,22 @@ fn rejects_nonpositive_buy_and_price() {
     );
 }
 
-// The OZ `validate_expiration_ledger` guard is the authoritative rate-lock
-// deadline check. Verify the boundary it enforces: a quote is consumable at
-// the last valid ledger (`expires_at - 1`) and rejected exactly one ledger on.
+// The `consume_quote` expiry predicate is the rate-lock deadline check. Verify
+// its boundary: a quote is consumable at the last valid ledger (`expires_at - 1`)
+// and rejected exactly one ledger on, at `expires_at`.
 #[test]
-fn oz_expiration_guard_boundary_is_tight() {
+fn expiry_boundary_is_tight() {
     let (env, c, _admin) = setup();
     let (sell, buy, price, fee) = consistent();
     let id = qid(&env, 20);
     let expires = c.lock_quote(&id, &sell, &buy, &price, &fee, &180);
 
-    // At the last valid ledger (expires - 1) the OZ guard permits consumption.
+    // At the last valid ledger (expires - 1) consumption is permitted.
     env.ledger().set_sequence_number(expires - 1);
     c.consume_quote(&id, &qid(&env, 21));
     assert!(c.get_quote(&id).unwrap().consumed);
 
-    // A fresh quote consumed exactly at `expires` is rejected by the guard.
+    // A fresh quote consumed exactly at `expires` is rejected.
     let id2 = qid(&env, 22);
     let expires2 = c.lock_quote(&id2, &sell, &buy, &price, &fee, &180);
     env.ledger().set_sequence_number(expires2);
