@@ -37,7 +37,7 @@ See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthro
 
 | Path | Component | Status |
 | --- | --- | --- |
-| [`contracts/fx-rate-lock/`](contracts/fx-rate-lock) | **SEP-38 Rate-Lock** — locks firm quotes in Temporary storage (CAP-46-12); dies at TTL=0; composes OZ `stellar_fee_abstraction` | Implemented + tested · audit → mainnet |
+| [`contracts/fx-rate-lock/`](contracts/fx-rate-lock) | **SEP-38 Rate-Lock** — locks firm quotes in Temporary storage (CAP-46-12); dies at TTL=0; composes OZ `stellar_access::access_control` for admin auth | Implemented + tested · audit → mainnet |
 | [`contracts/partner-attribution/`](contracts/partner-attribution) | **Partner-Attribution Wrapper** — SAC admin wrapper over USDC (OZ `sac_admin_wrapper` + `access_control`); atomic `settle_split`; `partner_transfer` event; `Σ partner.bps ≤ 10_000` invariant | Implemented + tested · audit → mainnet |
 | [`contracts/card-collateral-poc/`](contracts/card-collateral-poc) | **Card-Collateral Smart Account** — collateral state machine + OZ `pausable` circuit breaker + `access_control`; USDC-only yield (never XLM) | Implemented + tested · **testnet PoC** |
 | [`anchor-platform/`](anchor-platform) | BR-configured Anchor Platform deployment — SEP-10/12/24/31/38, IOF in `fee.details[]`, payout-orchestration glue in the AP business server | T0 stubs → testnet vs sandbox anchor |
@@ -123,7 +123,7 @@ Full proposal lives in our team brain (private). Public summary in [`docs/grant.
 
 SEP-1, SEP-9, SEP-10, SEP-12 (BR custom fields), SEP-24, SEP-31, SEP-38, SEP-41 · CAP-33 (sponsored reserves), CAP-35 (asset clawback inherited from USDC), CAP-46-06 (deterministic USDC SAC), CAP-46-12 (Temporary storage). Full coverage matrix in [`docs/sep-cap-coverage.md`](docs/sep-cap-coverage.md).
 
-All three contracts compose **OpenZeppelin's audited `stellar-contracts =0.7.1`** (`stellar_fee_abstraction`, `stellar_tokens::fungible::sac_admin_wrapper`, `stellar_access::access_control`, `stellar_contract_utils::pausable`) on top of `soroban-sdk`. OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pins `soroban-sdk =25.3.0`. Composing audited building blocks shrinks the novel surface that needs Bleu's own audit — it does not make these contracts audited (audit is the T3 deliverable).
+All three contracts compose **OpenZeppelin's audited `stellar-contracts =0.7.1`** (`stellar_access::access_control` — admin auth on all three; `stellar_tokens::fungible::sac_admin_wrapper`; `stellar_contract_utils::pausable`) on top of `soroban-sdk`. OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pins `soroban-sdk =25.3.0`. Composing audited building blocks shrinks the novel surface that needs Bleu's own audit — it does not make these contracts audited (audit is the T3 deliverable).
 
 ## Contributing
 

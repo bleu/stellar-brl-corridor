@@ -157,4 +157,4 @@ bleu -> card_net: "issuer-API adapter (PoC)\nauth · capture · refund\n(offchai
 card_net -> bleu: "auth decisions\nsettlement feed"
 
 # -- Build-time --
-oz -> bleu: "composes:\nsac_admin_wrapper ·\nFeeAbstraction ·\npausable + access_control (card PoC)\nSmartAccount + policies (production vault)"
+oz -> bleu: "composes:\nsac_admin_wrapper ·\naccess_control (admin auth, all 3) ·\npausable (card PoC)\nSmartAccount + policies (production vault)"

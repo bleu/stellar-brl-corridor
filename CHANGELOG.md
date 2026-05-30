@@ -10,8 +10,9 @@ workspace.
 - **FX Rate-Lock** contract — SEP-38 firm-quote `lock_quote` / `consume_quote`
   with Temporary-storage expiry (+grace), an on-chain SEP-38 price-invariant
   check, replay/double-settle guards, and `quote_locked` / `quote_use`
-  `#[contractevent]`s. Composes OZ `stellar_fee_abstraction::validate_expiration_ledger`
-  as the rate-lock deadline guard. 10 unit tests.
+  `#[contractevent]`s. Admin auth composes OZ `stellar_access::access_control`
+  (`#[only_admin]`); the rate-lock deadline is Bleu's own typed `QuoteExpired`
+  check. 10 unit tests.
 - **Partner Attribution** contract — a SAC admin wrapper over USDC composing OZ
   `stellar_tokens::fungible::sac_admin_wrapper` + `stellar_access::access_control`.
   `settle_split` moves real balance through the SAC's SEP-41 `transfer`,
@@ -29,6 +30,18 @@ workspace.
 - **Composed OpenZeppelin `stellar-contracts =0.7.1`** into all three contracts.
   OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pin moved from
   `soroban-sdk 26` to `=25.3.0` (no OZ release targets soroban-sdk 26 yet).
+- **FX Rate-Lock admin auth moved onto OZ `stellar_access::access_control`**
+  (`#[only_admin]` on `lock_quote` / `consume_quote`), matching the sibling
+  contracts. Dropped the `stellar-fee-abstraction` dependency and its
+  `validate_expiration_ledger` call; the rate-lock deadline is now a single
+  typed `QuoteExpired` predicate. `NotInitialized` / `AlreadyInitialized` error
+  discriminants are retained for ABI stability. Behavior-identical.
+- **Card-Collateral PoC dropped the unused `expires_at_ledger` field and the
+  `ttl_ledgers` `reserve` parameter** (the value was stored but never read);
+  `collateral_locked` no longer carries `expires_at_ledger`.
+- **Partner Attribution `settle_split` no longer emits a phantom
+  `partner_transfer`** for a zero-value share — the event fires only when balance
+  actually moves.
 - Wasm build sets `SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2=1`
   (justfile + CI), required because OZ 0.7.1 enables soroban-sdk's
   `experimental_spec_shaking_v2` feature.

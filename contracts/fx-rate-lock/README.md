@@ -31,8 +31,8 @@ SEP-38 firm-quote rate-lock for the BRL↔USDC corridor. Locks a quoted rate on-
 
 ## Composition
 
-The `consume_quote` deadline check composes OpenZeppelin's audited `stellar_fee_abstraction::validate_expiration_ledger` (`stellar-contracts =0.7.1`) as the authoritative rate-lock expiry guard, replacing the hand-rolled ledger comparison. This contract owns the remaining novel surface: SEP-38 quote hashing, the price invariant, the Temporary-storage lifecycle, and the `quote_use` event. (OZ 0.7.1 requires `soroban-sdk ^25.3.0`; the workspace pins `=25.3.0`.)
+Admin auth composes OpenZeppelin's audited `stellar_access::access_control` (`stellar-contracts =0.7.1`), matching the sibling contracts: `lock_quote` and `consume_quote` are gated `#[only_admin]`. The `consume_quote` rate-lock deadline is Bleu's own typed check — it returns `QuoteExpired` the instant the current ledger reaches `expires_at_ledger`. This contract owns the novel surface: SEP-38 quote hashing, the price invariant, the Temporary-storage lifecycle, the expiry deadline, and the `quote_use` event. (OZ 0.7.1 requires `soroban-sdk ^25.3.0`; the workspace pins `=25.3.0`.)
 
 ## Tests
 
-`cargo test -p bleu-fx-rate-lock` — 10 unit tests: lock/consume happy path, zero-fee quote, double-consume rejection, expiry (consume + grace-window readability), the OZ expiration-guard boundary, price-invariant trap, input validation (non-positive sell/buy/price, negative IOF, zero TTL), unknown-quote.
+`cargo test -p bleu-fx-rate-lock` — 10 unit tests: lock/consume happy path, zero-fee quote, double-consume rejection, expiry (consume + grace-window readability), the expiry-deadline boundary, price-invariant trap, input validation (non-positive sell/buy/price, negative IOF, zero TTL), unknown-quote.

@@ -10,7 +10,7 @@ Demonstrates a capability Stellar enables that EVM card stacks do not: native US
 
 | Fn | Params | Returns | Auth |
 |---|---|---|---|
-| `reserve` | `auth_id: BytesN<32>, amount: i128, ttl_ledgers: u32` | `()` | admin · blocked while paused |
+| `reserve` | `auth_id: BytesN<32>, amount: i128` | `()` | admin · blocked while paused |
 | `settle` | `auth_id, final_amount: i128` | `i128` (shortfall, 0 if covered) | admin |
 | `release` | `auth_id` | `i128` (returned) | admin |
 | `get_lock` | `auth_id` | `Option<CardLock>` | — |
@@ -25,7 +25,7 @@ Plus the OZ `AccessControl` interface (grant/revoke roles, admin transfer, queri
 
 ## Events (`#[contractevent]`)
 
-- `collateral_locked(auth_id)` → `{ amount, expires_at_ledger }`
+- `collateral_locked(auth_id)` → `{ amount }`
 - `card_settle(auth_id)` → `{ final_amount, settled }`
 - `shortfall(auth_id)` → `{ shortfall }` *(settlement exceeded locked collateral)*
 - `collateral_released(auth_id)` → `{ returned }`
@@ -38,4 +38,4 @@ This PoC composes the OpenZeppelin (`stellar-contracts =0.7.1`) blocks that fit 
 
 ## Tests
 
-`cargo test -p bleu-card-collateral-poc` — 9 unit tests: reserve/settle/release, shortfall on over-clearing, shortfall invariant across covered + breached cases, cumulative settles, double-reserve rejection, unknown-auth, input validation (non-positive amount, zero TTL, negative final amount), and the pausable circuit breaker (pause blocks reserve while still allowing settle/release wind-down, unpause restores).
+`cargo test -p bleu-card-collateral-poc` — 9 unit tests: reserve/settle/release, shortfall on over-clearing, shortfall invariant across covered + breached cases, cumulative settles, double-reserve rejection, unknown-auth, input validation (non-positive amount, negative final amount), and the pausable circuit breaker (pause blocks reserve while still allowing settle/release wind-down, unpause restores).

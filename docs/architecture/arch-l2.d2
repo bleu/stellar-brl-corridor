@@ -178,7 +178,7 @@ sc: Soroban Contracts (attr + rfq on Mainnet, audited · vault = testnet PoC) {
     *Mainnet · audited*
     custom Soroban
     Temporary storage (CAP-46-12)
-    reuses OZ `stellar_fee_abstraction::validate_expiration_ledger`
+    admin auth via OZ `stellar_access::access_control`
     `(quote_use, quote_id, context, sep31_tx_id)` events
   | {class: soroban}
 
