@@ -21,6 +21,21 @@ An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus *
 
 Built under [SCF #44](https://communityfund.stellar.org/) (Build Award, Integration track).
 
+## Documentation
+
+All docs live in [`docs/`](docs/) — index: [`docs/README.md`](docs/README.md).
+
+| Doc | What |
+| --- | --- |
+| **[REVIEWERS](docs/REVIEWERS.md)** | 60-second verification path for SCF reviewers — **start here** |
+| [Architecture](docs/architecture/README.md) | C4 L1/L2/L3 + contract overview (the Technical Architecture Document) |
+| [Live demo](docs/DEMO.md) | Every primitive executing on-chain, with clickable testnet tx hashes |
+| [Provenance](docs/PROVENANCE.md) | Deployed contracts reproduce **byte-for-byte** from source |
+| [Event indexer](indexer/README.md) | RPC `getEvents` ingester → Postgres/NDJSON (`just index`) |
+| [Anchor Platform](docs/ANCHOR-PLATFORM.md) | BR SEP-1 TOML + SEP-38 firm-quote config (IOF-ready `fee.details[]`) |
+| [SEP / CAP coverage](docs/sep-cap-coverage.md) | Which specs the corridor consumes / extends / proposes |
+| [Grant summary](docs/grant.md) | SCF #44 scope, tranches, team |
+
 ## Architecture
 
 See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthrough. Quick view:
@@ -44,7 +59,7 @@ See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthro
 | [`sdk/typescript/`](sdk/typescript) · [`sdk/python/`](sdk/python) | Public SDKs (generated from Soroban contract specs via `stellar contract bindings`) | T0 skeleton → T3 published to npm + PyPI |
 | [`indexer/`](indexer) | Soroban event indexer — RPC `getEvents` → Postgres/NDJSON (`just index`) | Implemented · ingests live testnet events |
 | [`apps/dashboard/`](apps/dashboard) · [`apps/partner-console/`](apps/partner-console) | Reference enterprise + partner surfaces | T0 stub |
-| [`docs/`](docs) | Architecture, SEP/CAP coverage, grant summary | live |
+| [`docs/`](docs/README.md) | Architecture, demo, provenance, Anchor Platform, SEP/CAP, grant — see the [docs index](docs/README.md) | live |
 
 Payout orchestration is **glue inside the AP business server** (a cursor-batched `Vec<PayoutEntry>` dispatch with fee-bump ×10 retry), **not** a standalone contract.
 
