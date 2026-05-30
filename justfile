@@ -73,6 +73,11 @@ ap-down:
 ap-check:
     curl -s localhost:8080/.well-known/stellar.toml && echo && curl -s localhost:8080/sep38/info
 
+# Index the corridor contracts' events off testnet RPC (getEvents → NDJSON, or
+# Postgres if DATABASE_URL is set). Idempotent; resumes from the last ledger.
+index:
+    cd indexer && npm install --silent && npm run index
+
 # Clean Rust + Node build outputs
 clean:
     cargo clean

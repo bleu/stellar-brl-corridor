@@ -1,15 +1,23 @@
 {
   "name": "@bleu/stellar-brl-corridor-indexer",
-  "version": "0.0.1",
-  "description": "Open-source Soroban event indexer — polls Stellar RPC getEvents with cursor and writes to Postgres. T0 stub.",
+  "version": "0.1.0",
+  "description": "Open-source Soroban event indexer — polls Stellar RPC getEvents (cursor + dedup), sinks corridor events to Postgres or NDJSON. Reference template any Stellar builder can fork.",
   "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc -p .",
-    "test": "tsc --noEmit -p ."
+    "test": "tsc --noEmit -p .",
+    "index": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^14.5.0",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   },
   "engines": {

@@ -42,7 +42,7 @@ See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthro
 | [`contracts/card-collateral-poc/`](contracts/card-collateral-poc) | **Card-Collateral Smart Account** — collateral state machine + OZ `pausable` circuit breaker + `access_control`; USDC-only yield (never XLM) | Implemented + tested · **testnet PoC** |
 | [`anchor-platform/`](anchor-platform) | BR-configured Anchor Platform deployment — SEP-10/12/24/31/38, IOF in `fee.details[]`, payout-orchestration glue in the AP business server | T0 stubs → testnet vs sandbox anchor |
 | [`sdk/typescript/`](sdk/typescript) · [`sdk/python/`](sdk/python) | Public SDKs (generated from Soroban contract specs via `stellar contract bindings`) | T0 skeleton → T3 published to npm + PyPI |
-| [`indexer/`](indexer) | Soroban event indexer — Postgres sink (OSS template) | T0 stub |
+| [`indexer/`](indexer) | Soroban event indexer — RPC `getEvents` → Postgres/NDJSON (`just index`) | Implemented · ingests live testnet events |
 | [`apps/dashboard/`](apps/dashboard) · [`apps/partner-console/`](apps/partner-console) | Reference enterprise + partner surfaces | T0 stub |
 | [`docs/`](docs) | Architecture, SEP/CAP coverage, grant summary | live |
 
@@ -93,6 +93,8 @@ stellar contract fetch --network mainnet --id <CONTRACT_ID> | sha256sum
 ```
 
 CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`).
+
+**Verified:** the three deployed testnet contracts reproduce **byte-for-byte** from source at the commit embedded in their on-chain metadata — see [`docs/PROVENANCE.md`](docs/PROVENANCE.md).
 
 ## Deployed addresses
 

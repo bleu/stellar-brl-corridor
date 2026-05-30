@@ -31,6 +31,7 @@ git clone git@github.com:bleu/stellar-brl-corridor.git && cd stellar-brl-corrido
 
 just demo          # re-run the full on-chain demo (real testnet txs, prints a clickable hash per step)
 just sdk-example   # TS SDK reads live on-chain state (admin / total_bps / sac) off testnet RPC — read-only
+just index         # ingest the contracts' live events off RPC getEvents → NDJSON (best-practice indexer)
 just ap-up && just ap-check   # boot the BR Anchor Platform; it serves SEP-1 stellar.toml + SEP-38 /info
 cargo test --workspace        # 31 passing unit tests
 ```
@@ -39,6 +40,8 @@ cargo test --workspace        # 31 passing unit tests
 - **Technical architecture** (C4 L1/L2/L3 + contract overview): [`docs/architecture/README.md`](architecture/README.md)
 - **SEP / CAP coverage matrix**: [`docs/sep-cap-coverage.md`](sep-cap-coverage.md)
 - **Anchor Platform** (SEP-1 TOML, SEP-38 quote with IOF-ready `fee.details[]`): [`docs/ANCHOR-PLATFORM.md`](ANCHOR-PLATFORM.md)
+- **Event indexer** (RPC `getEvents` → Postgres/NDJSON, best-practice): [`indexer/`](../indexer)
+- **Build provenance** — deployed contracts reproduce **byte-for-byte** from source: [`docs/PROVENANCE.md`](PROVENANCE.md)
 - **Grant summary**: [`docs/grant.md`](grant.md)
 
 ## What's done vs. what the grant funds
