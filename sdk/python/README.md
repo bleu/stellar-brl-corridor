@@ -11,16 +11,6 @@ Python SDK for Bleu's BRL/PIX corridor on Stellar — Anchor Platform + SEP-38 r
 pip install -e .
 ```
 
-## Quickstart
+## Status
 
-```python
-from bleu_corridor import BleuClient, BleuClientConfig
-
-client = BleuClient(BleuClientConfig(
-    rpc_url="https://soroban-testnet.stellar.org",
-    anchor_domain="anchor.example.com",
-    network="testnet",
-))
-
-assert client.ping() == "ok"
-```
+T0 — version placeholder only; no client yet. Python bindings land in T1, generated from the deployed contracts the same way the TypeScript SDK is (`stellar contract bindings`). The **TypeScript SDK already reads live testnet state today** — see [`../typescript`](../typescript) (`just sdk-example`).

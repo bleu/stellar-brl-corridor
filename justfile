@@ -50,9 +50,11 @@ deploy-testnet network="testnet":
 demo run_tag="":
     scripts/demo_testnet.sh {{run_tag}}
 
-# Generate TypeScript bindings from a deployed contract id.
-bindings contract_id network="testnet":
-    stellar contract bindings typescript --network {{network}} --contract-id {{contract_id}} --output-dir sdk/typescript/src/generated --overwrite
+# Generate TypeScript bindings from a deployed contract into its OWN subdir,
+# e.g. `just bindings partner-attribution <CID>`. The per-contract output dir
+# avoids the flatten/overwrite that a shared dir causes on the 2nd contract.
+bindings name contract_id network="testnet":
+    stellar contract bindings typescript --network {{network}} --contract-id {{contract_id}} --output-dir sdk/typescript/src/generated/{{name}} --overwrite
 
 # Read LIVE testnet state via the TypeScript SDK (read-only; no signing, no funds).
 # Connects to testnet RPC and prints partner-attribution admin / total_bps / sac.

@@ -7,7 +7,7 @@ SEP-38 firm-quote rate-lock for the BRL↔USDC corridor. Locks a quoted rate on-
 - **No stale quotes.** Each quote lives in Temporary storage (CAP-46-12) and is reclaimed at TTL — an expired quote ceases to exist by construction.
 - **No malformed quotes.** `lock_quote` re-derives the SEP-38 price relation `(sell − fee) == price · buy` in fixed-point and traps on mismatch, so an inconsistent quote can never be stored.
 - **No replay / double-settle.** `consume_quote` is guarded by ledger-sequence expiry plus a one-shot `consumed` flag.
-- **IOF disclosure** (`Decreto 6.306/2007`) is bound to the locked rate via `fee_iof`; the licensed anchor collects it at conversion — this contract only discloses it.
+- **IOF-ready disclosure** (`Decreto 6.306/2007`) is bound to the locked rate via `fee_iof` — anticipatory; IOF is not currently mandated for crypto FX. If/when it applies the licensed anchor collects it at conversion — this contract only discloses it.
 
 ## API
 

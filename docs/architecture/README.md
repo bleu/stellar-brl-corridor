@@ -34,7 +34,7 @@ Fintechs, FX operators, and channel partners consume the stack via REST API, Typ
 
 **Regulatory**
 - **BCB Resoluções 519–521** (SPSAV regime; FX-reporting regime in force). Bleu = non-custodial software provider; external-counsel-signed preliminary memo at submission.
-- **IOF disclosure** via SEP-38 `fee.details[]` (`{name: "IOF", description: "Decreto 6.306/2007"}`). Collected by the anchor at BRL↔USDC conversion.
+- **IOF-ready disclosure** via SEP-38 `fee.details[]` (`{name: "IOF", description: "Decreto 6.306/2007"}`, default `0`) — anticipatory; IOF is not currently mandated for crypto/virtual-asset FX. The anchor would collect it at BRL↔USDC conversion if/when it applies.
 - **LGPD dual-controller**: anchor controls anchor-collected data, fintech controls SEP-12-injected KYC, Bleu processes operational metadata only.
 - **Dual-compliance KYC/KYB**: SEP-12 shares *verified attributes*; does not replace either party's independent obligation.
 

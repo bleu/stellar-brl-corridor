@@ -14,7 +14,7 @@
 
 ## What this is
 
-An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus **two** mainnet-bound Soroban primitives (audit scheduled via the SDF Soroban Audit Bank, pre-mainnet) and a **testnet proof-of-concept** card-collateral smart account. The corridor wraps SEP-31 B2B receive flows with PIX semantics, surfaces BCB-compliant IOF disclosure inside SEP-38 firm quotes, and turns B2B2B distribution economics into on-chain `partner_transfer` events.
+An MIT-licensed BR-configured deployment of Stellar's **Anchor Platform** plus **two** mainnet-bound Soroban primitives (audit scheduled via the SDF Soroban Audit Bank, pre-mainnet) and a **testnet proof-of-concept** card-collateral smart account. The corridor wraps SEP-31 B2B receive flows with PIX semantics, carries an IOF-ready disclosure field inside SEP-38 firm quotes (anticipatory — IOF is not currently mandated for crypto/virtual-asset FX), and turns B2B2B distribution economics into on-chain `partner_transfer` events.
 
 - **Brazil's PIX rail moves ~US$550B/month, and no BACEN-licensed operator runs a production SEP-31 BR anchor today.** Bleu closes that gap with a partner-anchor approach (10-candidate BACEN FX-licensed pool; offshore Stellar anchor as "or equivalent" fallback).
 - **The contract logic is portable; the operating corridor is not.** Bleu defends Stellar's LatAm position by making the corridor integration reusable.
