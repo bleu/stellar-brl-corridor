@@ -1,7 +1,7 @@
 # Bleu — Stellar BRL/PIX Corridor
 
 > Operationalizing **Anchor Platform** + **SDP** + Soroban for Brazil's BRL/PIX corridor on Stellar.
-> MIT-licensed. Three Soroban contracts implemented + tested (30 unit tests, CI green), each composing OpenZeppelin's audited `stellar-contracts =0.7.1`; Anchor Platform config, SDK, indexer, and dashboard scaffolds in progress. Pre-mainnet.
+> MIT-licensed. Three Soroban contracts implemented + tested (31 unit tests, CI green), each composing OpenZeppelin's audited `stellar-contracts =0.7.1`; Anchor Platform config, SDK, indexer, and dashboard scaffolds in progress. Pre-mainnet.
 
 [![CI](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml/badge.svg)](https://github.com/bleu/stellar-brl-corridor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -96,7 +96,7 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 
 ## Deployed addresses
 
-> Live on **testnet** (deployed 2026-05-29; see [`deployments/testnet.json`](deployments/testnet.json), reproduce with `just deploy-testnet`). Mainnet addresses populate after audit (T3). Testnet USDC SAC: [`CBCIMM65…OH37`](https://stellar.expert/explorer/testnet/contract/CBCIMM652YGFPUJ3YVKJL6LNJGHCU7S22IPQXJWMA2ZC7CRA4Q2XOH37).
+> Live on **testnet** (deployed 2026-05-30; see [`deployments/testnet.json`](deployments/testnet.json), reproduce with `just deploy-testnet`). Mainnet addresses populate after audit (T3). Testnet USDC SAC: [`CBCIMM65…OH37`](https://stellar.expert/explorer/testnet/contract/CBCIMM652YGFPUJ3YVKJL6LNJGHCU7S22IPQXJWMA2ZC7CRA4Q2XOH37).
 >
 > **Live demo:** all three primitives are demonstrated working on-chain, with reviewer-clickable transaction hashes, in [`docs/DEMO.md`](docs/DEMO.md). Reproduce the full run with `just demo`.
 >
@@ -106,9 +106,9 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 
 | Contract | Testnet | Mainnet | Block-explorer |
 | --- | --- | --- | --- |
-| `fx-rate-lock` | `CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDI6XOFI3OSXKDPHRLPGKJGWHP37V2EFX3KUCQ6R2DUMIT2Y7JSJEHIL) |
-| `partner-attribution` | `CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CBQNOWPD4T2PMGADTE6QID6WLMDU7LAHS4LPKOV2USLVXD3X6DX763KR) |
-| `card-collateral-poc` | `CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW` | **testnet PoC only** | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDBZXWAN6564WGPWXJRFD6EXEKHYHJV62G23SJJLY5I6ROLC5LQ6H3MW) |
+| `fx-rate-lock` | `CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW) |
+| `partner-attribution` | `CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR) |
+| `card-collateral-poc` | `CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT` | **testnet PoC only** | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT) |
 
 ## Roadmap
 

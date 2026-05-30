@@ -60,15 +60,19 @@ invoke() {
   shift # drop the literal "--"
   local out hash ret errfile
   errfile="$(mktemp)"
-  # --send=yes forces a real on-chain submission. The CLI prints the tx hash to
-  # stderr on a dedicated line ("Transaction hash is <64-hex>"). Anchor the grep
-  # to that line so we never pick up some other 64-hex (e.g. a contract id or the
-  # "Signing transaction:" line) that happens to scroll by first.
+  # --send=yes forces a real on-chain submission. We anchor the hash capture to
+  # the CLI's explorer URL for the submitted tx ("…/testnet/tx/<64-hex>"), which
+  # is printed once per submission — never to a bare 64-hex that could be a
+  # contract id or some other identifier scrolling by first. Fall back to the
+  # "Transaction hash is <hash>" line for CLI builds that print that instead.
   out="$(stellar contract invoke --id "$cid" --source "$SOURCE" --network "$NETWORK" \
           --send=yes -- "$fn" "$@" 2>"$errfile")"
   cat "$errfile" >&2
-  hash="$(grep -Eo 'Transaction hash is [0-9a-f]{64}' "$errfile" \
-            | grep -Eo '[0-9a-f]{64}' | head -1 || true)"
+  hash="$(grep -Eo '/tx/[0-9a-f]{64}' "$errfile" | grep -Eo '[0-9a-f]{64}' | tail -1)"
+  if [ -z "$hash" ]; then
+    hash="$(grep -Eo 'Transaction hash is [0-9a-f]{64}' "$errfile" \
+              | grep -Eo '[0-9a-f]{64}' | tail -1 || true)"
+  fi
   rm -f "$errfile"
   # Strip surrounding JSON quotes so i128 returns ("200000000") compare as ints.
   ret="$(printf '%s' "$out" | tr -d '"')"
