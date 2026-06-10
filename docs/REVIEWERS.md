@@ -10,31 +10,45 @@ Deployed addresses + explorer links: [`deployments/testnet.json`](../deployments
 
 | Primitive | Live testnet contract |
 |---|---|
-| FX rate-lock | [`CDZLXRAW…JONVRW`](https://stellar.expert/explorer/testnet/contract/CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW) |
-| Partner attribution | [`CDBUJYLO…K53YR`](https://stellar.expert/explorer/testnet/contract/CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR) |
-| Card-collateral PoC | [`CC7HSHXJ…WH2WT`](https://stellar.expert/explorer/testnet/contract/CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT) |
+| FX rate-lock | [`CCF7U43L…UG2AI`](https://stellar.expert/explorer/testnet/contract/CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3UG2AI) |
+| Partner attribution | [`CCXSXAM7…23OFB`](https://stellar.expert/explorer/testnet/contract/CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM23OFB) |
+| Card-collateral PoC | [`CAVFABBN…IFRWV`](https://stellar.expert/explorer/testnet/contract/CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV) |
 
 ## 2. The primitives actually *execute* on-chain (20s — click the txs)
 Full walkthrough with every transaction: [`docs/DEMO.md`](DEMO.md). The flagship:
 
 - **Atomic B2B2B revenue split** — `settle_split` moved real USDC, split 30%/20% to two partners, emitted two `partner_transfer` events:
-  [tx `32d4880d…`](https://stellar.expert/explorer/testnet/tx/32d4880ddd59345247267cda9edbccc858ad1b27a8a2f38c030cbab0e3ce28cb)
-- **FX firm-quote consume** (`quote_use`, price invariant held on-chain): [tx `9370006f…`](https://stellar.expert/explorer/testnet/tx/9370006f8f3182c89055c4c4f19c26f06e2f55d8e1644c0e44666d4da7cbeeec)
-- **Card settle + shortfall event**: [tx `f609b291…`](https://stellar.expert/explorer/testnet/tx/f609b29103335914cb6edda981df163b1960219cffb39dafdd211303c0a80e03) · [tx `1e5df38f…`](https://stellar.expert/explorer/testnet/tx/1e5df38f1d9882cb9ecb2f0b5c8aa8b55c1197b2f61968d982817235d6427597)
+  [tx `d03dec96…`](https://stellar.expert/explorer/testnet/tx/d03dec96b07bdf664ea4136ea72a043838825a00e3691e90ce5cd01c21cfafd6)
+- **FX firm-quote consume** (`quote_use`, price invariant held on-chain): [tx `cd510591…`](https://stellar.expert/explorer/testnet/tx/cd5105914d7b813007a1fbdb9609fe8b8623b9e7a76059ed227ac967e6c769c4)
+- **Card settle + shortfall event**: [tx `69435816…`](https://stellar.expert/explorer/testnet/tx/694358160e3e1c259ff5c3b0057ed428518025b45765f2fdf013e46081c99f89) · [tx `bb6f3ac3…`](https://stellar.expert/explorer/testnet/tx/bb6f3ac3fb4e7ad32ea20f7b55ef2139d41542755f4fdf3688ce7f44ea7eb803)
 
-## 3. Run it yourself (each is one command)
+## 3. Run it yourself
 
 ![SDK reading live testnet state](media/sdk-live-testnet.gif)
 
 ```bash
 git clone git@github.com:bleu/stellar-brl-corridor.git && cd stellar-brl-corridor
-
-just demo          # re-run the full on-chain demo (real testnet txs, prints a clickable hash per step)
-just sdk-example   # TS SDK reads live on-chain state (admin / total_bps / sac) off testnet RPC — read-only
-just index         # ingest the contracts' live events off RPC getEvents → NDJSON (best-practice indexer)
-just ap-up && just ap-check   # boot the BR Anchor Platform; it serves SEP-1 stellar.toml + SEP-38 /info
-cargo test --workspace        # 31 passing unit tests
 ```
+
+**Read-only — no deployer key required:**
+
+```bash
+cargo test --workspace        # 31 passing unit tests (Rust only, no network)
+just sdk-example              # TS SDK reads live on-chain state off testnet RPC (admin / total_bps / sac)
+just index                    # ingest the contracts' live events off RPC getEvents → NDJSON
+just ap-up && just ap-check   # boot the BR Anchor Platform; serves SEP-1 stellar.toml + SEP-38 /info
+```
+
+**Full on-chain demo — deploys your own copy, then exercises it (~5 min):**
+
+```bash
+just deploy-testnet   # generates a fresh bleu-deployer key + funds it via friendbot, deploys all three contracts
+just demo             # runs every primitive against your newly deployed contracts, prints a clickable tx hash per step
+```
+
+`just deploy-testnet` creates the `bleu-deployer` keystore entry automatically if it doesn't exist — no pre-setup needed. The demo is self-contained against whatever addresses `just deploy-testnet` writes to `deployments/testnet.json`.
+
+> The pre-run tx hashes in section 2 above are from a captured run against the canonical deployment. Your own `just demo` run will produce different hashes (different quote ids, auth ids, partners) but exercises identical code paths.
 
 ## 4. Read the design
 - **Technical architecture** (C4 L1/L2/L3 + contract overview): [`docs/architecture/README.md`](architecture/README.md)

@@ -11,27 +11,28 @@ and gets the identical hash.
 ```bash
 # 1. Read the metadata embedded in the deployed (testnet) contract:
 stellar contract info meta --network testnet \
-  --contract-id CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW
-#   → rsver: 1.95.0 · rssdkver: 25.3.0 · commit: e14432b… · ci_run: local
+  --contract-id CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3UG2AI
+#   → rsver: 1.96.0 · rssdkver: 25.3.0 · commit: 7bcadc4… · ci_run: local
 
-# 2. Check out that commit and rebuild with the same meta:
-git checkout e14432bdd978027276a49bec89be45ff53db687c
-stellar contract build --meta commit=e14432bdd978027276a49bec89be45ff53db687c --meta ci_run=local
+# 2. Rebuild with the same meta (just wasm sets commit to HEAD and ci_run=local):
+just wasm
 
 # 3. Fetch the on-chain Wasm and compare hashes:
-stellar contract fetch --network testnet --id <CONTRACT_ID> -o onchain.wasm
-shasum -a 256 onchain.wasm target/wasm32v1-none/release/<crate>.wasm
+stellar contract fetch --network testnet \
+  --id CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3UG2AI \
+  -o onchain-fx.wasm
+shasum -a 256 onchain-fx.wasm target/wasm32v1-none/release/bleu_fx_rate_lock.wasm
 ```
 
-## Result (testnet, verified 2026-05-30) — byte-identical ✅
+## Result (testnet, verified 2026-06-10) — byte-identical ✅
 
 | Contract | Testnet id | Embedded `commit` | sha256 (on-chain **==** rebuilt) |
 |---|---|---|---|
-| `fx-rate-lock` | `CDZLXRAW…JONVRW` | `e14432b` | `263f657806d4fe02f3f292ccbed447cf2a55b492200c3ec298101556b239722c` |
-| `partner-attribution` | `CDBUJYLO…K53YR` | `e14432b` | `c885de54e39fd7e38c983552e5d2d05f8bd99d5637482815cad52ad51d5e3c8f` |
-| `card-collateral-poc` | `CC7HSHXJ…WH2WT` | `e14432b` | `f9b2681f5744a1d937eda045aaf30cc5b63e36630e000612122a8e008b5349b9` |
+| `fx-rate-lock` | [`CCF7U43L…UG2AI`](https://stellar.expert/explorer/testnet/contract/CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3UG2AI) | `7bcadc4` | `b256b4f4b42cba047ede82bde5b161f18ed9a5909c24cd028a8ccc8235239617` |
+| `partner-attribution` | [`CCXSXAM7…23OFB`](https://stellar.expert/explorer/testnet/contract/CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM23OFB) | `7bcadc4` | `a374119be10b237f3784209dd74b7b3276f4de4eeeff11880501520ddc38cfe5` |
+| `card-collateral-poc` | [`CAVFABBN…IFRWV`](https://stellar.expert/explorer/testnet/contract/CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV) | `7bcadc4` | `e95f338381efa9cf68aad9b1ba03140bf068cbe83cc55441c6630b278d4b2184` |
 
-All three on-chain hashes reproduce **exactly** from source at `e14432b` with
-`rsver 1.95.0` / `soroban-sdk 25.3.0` (pinned in `rust-toolchain.toml` + `Cargo.toml`).
-The build commit `e14432b` precedes the deploy commit `9a1bfeb` — the deploy
+All three on-chain hashes reproduce **exactly** from source at `7bcadc4` with
+`rsver 1.96.0` / `soroban-sdk 25.3.0` (pinned in `rust-toolchain.toml` + `Cargo.toml`).
+The build commit `7bcadc4` precedes the deploy commit `9a1bfeb` — the deploy
 script builds the Wasm, then commits the deploy record — and both are reachable on `main`.
