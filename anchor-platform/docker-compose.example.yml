@@ -3,8 +3,10 @@
 
 services:
   anchor-platform:
-    # TODO: pin to a specific stable release before T1 (e.g., stellar/anchor-platform:3.0.0).
-    image: stellar/anchor-platform:latest
+    # Pinned to 4.3.0: 4.4.0 has a bug where exchangeAmountsCalculator bean uses
+    # @OnAllSepsEnabled(sep6, sep24, sep31), so it's never created when sep24 is
+    # disabled. Revisit when a patch release fixes the condition.
+    image: stellar/anchor-platform:4.3.0
     container_name: bleu-ap
     restart: unless-stopped
     # AP needs an explicit start command; with none it prints usage and exits.
