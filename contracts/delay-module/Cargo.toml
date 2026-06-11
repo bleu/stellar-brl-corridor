@@ -1,0 +1,18 @@
+[package]
+name = "bleu-delay-module"
+description = "Delay Module policy contract — user operations queue, become executable after a cooldown, and expire after an execution window. Bleu BRL/PIX corridor on Stellar."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
