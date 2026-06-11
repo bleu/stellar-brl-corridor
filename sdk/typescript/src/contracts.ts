@@ -13,6 +13,7 @@
 
 import { Client as PartnerAttributionClient } from "./generated/partner-attribution/src/index.js";
 import { Client as FxRateLockClient } from "./generated/fx-rate-lock/src/index.js";
+import { Client as DelayModuleClient } from "./generated/delay-module/src/index.js";
 
 /** Public Soroban RPC endpoint for Stellar testnet. */
 export const TESTNET_RPC_URL = "https://soroban-testnet.stellar.org" as const;
@@ -28,6 +29,7 @@ export interface CorridorAddresses {
   readonly partnerAttribution: string;
   readonly fxRateLock: string;
   readonly cardCollateralPoc: string;
+  readonly delayModule: string;
   readonly usdcSac: string;
 }
 
@@ -44,6 +46,7 @@ export interface DeploymentFile {
     readonly "fx-rate-lock": string;
     readonly "partner-attribution": string;
     readonly "card-collateral-poc": string;
+    readonly "delay-module": string;
   };
 }
 
@@ -53,6 +56,7 @@ export function addressesFromDeployment(d: DeploymentFile): CorridorAddresses {
     partnerAttribution: d.contracts["partner-attribution"],
     fxRateLock: d.contracts["fx-rate-lock"],
     cardCollateralPoc: d.contracts["card-collateral-poc"],
+    delayModule: d.contracts["delay-module"],
     usdcSac: d.usdc_sac,
   };
 }
@@ -75,6 +79,7 @@ export interface CorridorClientOptions {
 export interface CorridorClients {
   readonly partnerAttribution: PartnerAttributionClient;
   readonly fxRateLock: FxRateLockClient;
+  readonly delayModule: DelayModuleClient;
 }
 
 /**
@@ -98,6 +103,11 @@ export function corridorClients(opts: CorridorClientOptions): CorridorClients {
     }),
     fxRateLock: new FxRateLockClient({
       contractId: opts.addresses.fxRateLock,
+      networkPassphrase,
+      rpcUrl,
+    }),
+    delayModule: new DelayModuleClient({
+      contractId: opts.addresses.delayModule,
       networkPassphrase,
       rpcUrl,
     }),

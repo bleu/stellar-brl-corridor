@@ -126,6 +126,7 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 | `fx-rate-lock` | `CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW) |
 | `partner-attribution` | `CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR) |
 | `card-collateral-poc` | `CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT` | **testnet PoC only** | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT) |
+| `delay-module` | `CAA47ICIUOVQEHZFIUJFBJYCWF6WJBLIYRRN4AJVHT5O7LNZ2LN7R72S` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CAA47ICIUOVQEHZFIUJFBJYCWF6WJBLIYRRN4AJVHT5O7LNZ2LN7R72S) |
 
 ## Roadmap
 
