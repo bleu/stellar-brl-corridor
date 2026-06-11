@@ -27,6 +27,13 @@ workspace.
 - TypeScript + Python SDK skeletons; Soroban event-indexer stub.
 
 ### Changed
+- **Architecture diagrams migrated from D2-rendered SVGs to inline Mermaid**
+  (GitHub renders them natively; the old 4100px+ canvases were illegible at
+  page width). The five C4 diagrams live as fenced blocks in
+  `docs/architecture/README.md`; the root README inlines the L1 system context.
+  `.d2` / `.svg` sources deleted — Mermaid is the single source of truth, and
+  `scripts/check_docs.sh` (`just check-docs`) validates every block with
+  mermaid-cli.
 - **Composed OpenZeppelin `stellar-contracts =0.7.1`** into all three contracts.
   OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pin moved from
   `soroban-sdk 26` to `=25.3.0` (no OZ release targets soroban-sdk 26 yet).

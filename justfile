@@ -29,6 +29,10 @@ lint:
     cargo fmt --all -- --check
     cargo clippy --workspace --all-targets -- -D warnings
 
+# Validate the inline Mermaid architecture diagrams (requires mermaid-cli)
+check-docs:
+    scripts/check_docs.sh
+
 # Auto-format
 fmt:
     cargo fmt --all
