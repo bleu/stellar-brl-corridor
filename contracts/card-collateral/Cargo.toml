@@ -1,0 +1,22 @@
+[package]
+name = "bleu-card-collateral"
+description = "Lien-aware card-collateral contract for the production vault. Extends the PoC reserve/settle/release state machine with per-lock ownership and a per-user lien aggregate (locked_total) readable in O(1) by the smart account and issuer adapter."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+# OZ audited pausable circuit-breaker + access control gating the collateral ops.
+stellar-contract-utils = { workspace = true }
+stellar-access = { workspace = true }
+stellar-macros = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
