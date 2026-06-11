@@ -76,7 +76,8 @@ deploy() {
 
 deploy "fx-rate-lock"        "bleu_fx_rate_lock.wasm"        "," --admin "$ADMIN"
 deploy "partner-attribution" "bleu_partner_attribution.wasm" "," --admin "$ADMIN" --usdc_sac "$USDC_SAC"
-deploy "card-collateral-poc" "bleu_card_collateral_poc.wasm" ""  --admin "$ADMIN"
+deploy "card-collateral-poc" "bleu_card_collateral_poc.wasm" "," --admin "$ADMIN"
+deploy "card-collateral"     "bleu_card_collateral.wasm"     ""  --admin "$ADMIN"
 
 echo "  }" >>"$OUT"
 echo "}" >>"$OUT"
