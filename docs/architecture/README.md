@@ -59,9 +59,7 @@ Fintechs, FX operators, and channel partners consume the stack via REST API, Typ
 
 ### 2.2 C4 L1 — System Context
 
-![L1](arch-l1.svg)
-
-Sources: [`arch-l1.d2`](arch-l1.d2) / [`arch-l1.svg`](arch-l1.svg).
+Diagram: [`arch-l1.mermaid`](arch-l1.mermaid)
 
 Actors: **Enterprise Customer**, **Fintech Integrator**, **FX / Remittance Operator**, **Channel Partner** (earning rev-share via `partner_transfer` events).
 
@@ -71,9 +69,7 @@ Build-time dependency (composed today): **OpenZeppelin Stellar Contracts** (`ste
 
 ### 2.3 C4 L2 — Containers
 
-![L2](arch-l2.svg)
-
-Sources: [`arch-l2.d2`](arch-l2.d2) / [`arch-l2.svg`](arch-l2.svg).
+Diagram: [`arch-l2.mermaid`](arch-l2.mermaid)
 
 Three zones inside the Bleu Platform boundary:
 
@@ -87,23 +83,21 @@ Outside the boundary: the **two** mainnet Soroban contracts (attribution + rate-
 
 #### 2.4.1 SEP-31 + SEP-38 + IOF flow
 
-![L3 SEP-31](arch-l3-sep31-flow.svg)
+Diagram: [`arch-l3-sep31-flow.mermaid`](arch-l3-sep31-flow.mermaid)
 
-Sources: [`arch-l3-sep31-flow.d2`](arch-l3-sep31-flow.d2) / [`arch-l3-sep31-flow.svg`](arch-l3-sep31-flow.svg).
+If the quote expires before settlement, Temporary-storage death (CAP-46-12) is the enforcement mechanism — see [§2.1](#21-flow--sep-31-b2b-pix-receive-with-sep-38-firm-quote).
 
 #### 2.4.2 Card-collateral authorization *(testnet PoC)*
 
-![L3 card auth](arch-l3-card-auth.svg)
+This sequence depicts the **production** card-collateral vault target (SmartAccount / webauthn / spending-limit policy / USDC settlement, CAP-21/23). The shipped testnet PoC ([`contracts/card-collateral-poc`](../../contracts/card-collateral-poc)) implements only the admin-gated reserve/settle/release state machine + shortfall accounting, composing OZ `pausable` + `access_control`; it does not call USDC or `do_check_auth`.
 
-Sources: [`arch-l3-card-auth.d2`](arch-l3-card-auth.d2) / [`arch-l3-card-auth.svg`](arch-l3-card-auth.svg).
+Diagram: [`arch-l3-card-auth.mermaid`](arch-l3-card-auth.mermaid)
 
 Yield, where present, accrues on **USDC** collateral — never on XLM.
 
 #### 2.4.3 CAP-33 sponsor-sandwich onboarding
 
-![L3 onboarding](arch-l3-onboarding.svg)
-
-Sources: [`arch-l3-onboarding.d2`](arch-l3-onboarding.d2) / [`arch-l3-onboarding.svg`](arch-l3-onboarding.svg).
+Diagram: [`arch-l3-onboarding.mermaid`](arch-l3-onboarding.mermaid)
 
 The atomic five-operation transaction that creates a zero-XLM-ready account: `BeginSponsoringFutureReservesOp` → `CreateAccountOp` → `ChangeTrustOp(USDC)` → `ChangeTrustOp(BRL)` → `EndSponsoringFutureReservesOp`, with dual signatures for mutual consent. The constraint that governs the whole onboarding path: **Soroban contracts cannot interact with sponsorships**, so the sandwich runs at the classic-tx layer around any contract calls.
 

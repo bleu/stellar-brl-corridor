@@ -42,11 +42,11 @@ See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthro
 
 | Level | Diagram |
 | --- | --- |
-| L1 — System Context | [![L1](docs/architecture/arch-l1.svg)](docs/architecture/arch-l1.svg) |
-| L2 — Containers | [![L2](docs/architecture/arch-l2.svg)](docs/architecture/arch-l2.svg) |
-| L3 — SEP-31 + SEP-38 + IOF flow | [![L3 SEP-31](docs/architecture/arch-l3-sep31-flow.svg)](docs/architecture/arch-l3-sep31-flow.svg) |
-| L3 — CAP-33 sponsor-sandwich onboarding | [![L3 onboarding](docs/architecture/arch-l3-onboarding.svg)](docs/architecture/arch-l3-onboarding.svg) |
-| L3 — Card-collateral authorization (testnet PoC) | [![L3 card](docs/architecture/arch-l3-card-auth.svg)](docs/architecture/arch-l3-card-auth.svg) |
+| L1 — System Context | [`arch-l1.mermaid`](docs/architecture/arch-l1.mermaid) |
+| L2 — Containers | [`arch-l2.mermaid`](docs/architecture/arch-l2.mermaid) |
+| L3 — SEP-31 + SEP-38 + IOF flow | [`arch-l3-sep31-flow.mermaid`](docs/architecture/arch-l3-sep31-flow.mermaid) |
+| L3 — CAP-33 sponsor-sandwich onboarding | [`arch-l3-onboarding.mermaid`](docs/architecture/arch-l3-onboarding.mermaid) |
+| L3 — Card-collateral authorization (testnet PoC) | [`arch-l3-card-auth.mermaid`](docs/architecture/arch-l3-card-auth.mermaid) |
 
 ## What's in this repo
 

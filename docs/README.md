@@ -20,4 +20,4 @@ Docs for the Bleu BRL/PIX corridor on Stellar — [SCF #44](https://communityfun
 
 ## Diagrams
 
-`architecture/*.svg` (generated from `*.d2` with [d2](https://d2lang.com)): L1 system context · L2 containers · L3 SEP-31 + SEP-38 + IOF flow · L3 CAP-33 sponsor-sandwich onboarding · L3 card-collateral authorization.
+All C4 diagrams are [Mermaid](https://mermaid.js.org) files (`architecture/*.mermaid`), linked from [architecture/README.md](architecture/README.md): L1 system context · L2 containers · L3 SEP-31 + SEP-38 + IOF flow · L3 CAP-33 sponsor-sandwich onboarding · L3 card-collateral authorization.

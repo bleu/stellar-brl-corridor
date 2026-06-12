@@ -1,0 +1,46 @@
+sequenceDiagram
+    autonumber
+    participant cardholder as Cardholder
+    participant merchant as Merchant POS
+    participant network as Card Network<br>(Visa / Mastercard)
+    participant issuer as Issuer / BIN Sponsor<br>(Monavate-pattern EMI)
+    participant adapter as Card Issuer Adapter<br>(Bleu · offchain)
+    participant vault as Card-Collateral Vault<br>(Soroban · production vault design)
+    participant usdc as USDC SAC<br>(Stellar Mainnet)
+
+    cardholder->>merchant: swipe / tap<br>€50 purchase
+    merchant->>network: authorization request
+    network->>issuer: auth req<br>PAN / amount / MCC
+
+    issuer->>adapter: POST /auth webhook<br>{card_bin, amount_usd,<br>merchant, mcc}
+
+    adapter->>vault: invoke reserve(card_bin,<br>amount, expires_at)
+    vault->>vault: SmartAccount.do_check_auth<br>webauthn / ed25519
+    vault->>vault: SpendingLimit check<br>rolling window
+    vault->>vault: when_not_paused guard
+    vault->>usdc: transfer_from(allowance)
+    usdc-->>vault: SEP-41 transfer event
+    vault->>vault: Lock(id) Persistent entry
+    vault-->>adapter: reserve_ok — emit<br>(collateral_locked, card_bin)
+
+    adapter-->>issuer: 200 approve<br>(auth_id, reserved_amount)
+    issuer-->>network: approved
+    network-->>merchant: approval code
+    merchant-->>cardholder: ✓ receipt
+
+    network->>issuer: clearing batch
+    issuer->>adapter: POST /capture webhook<br>(auth_id, final_amount)
+    adapter->>vault: invoke settle(auth_id,<br>final_amount)
+    vault->>vault: CAP-21 minSeqAge<br>cool-down enforced
+    vault->>usdc: transfer → issuer<br>settlement address
+    alt final_amount ≤ locked collateral
+        vault-->>adapter: emit (card_settle, auth_id,<br>final_amount)
+    else shortfall — clearing exceeds the lock
+        vault-->>adapter: emit (card_settle) + (shortfall)<br>invariant breached: locked ≥ authorized − settled
+    end
+
+    network->>issuer: refund / expire
+    issuer->>adapter: POST /refund OR<br>(no capture before expiry)
+    adapter->>vault: invoke release(auth_id)
+    vault->>vault: CAP-23 Claimable Balance<br>And(Claimant(cardholder),<br>AbsBefore(expires_at))
+    vault-->>adapter: emit (collateral_released)

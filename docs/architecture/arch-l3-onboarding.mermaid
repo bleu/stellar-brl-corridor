@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    participant enterprise as Enterprise User<br>(non-crypto · zero XLM)
+    participant fintech as Fintech UI
+    participant api as Bleu API Gateway
+    participant orch as Orchestrator Service
+    participant signer as Sponsor Signer<br>(hardware wallet / Fireblocks)
+    participant rpc as Stellar RPC
+    participant core as Stellar Core<br>(Mainnet)
+
+    enterprise->>fintech: sign up<br>business email · CPF/CNPJ
+    fintech->>api: POST /accounts/onboard<br>(KYC pre-verified via SEP-12)
+    api->>orch: orchestrate onboarding
+
+    orch->>orch: generate sponsored keypair<br>(ephemeral — delivered to wallet<br>via BYO wallet interop)
+    orch->>orch: build tx with ordered ops:<br>Begin → CreateAccount →<br>ChangeTrust(USDC) →<br>ChangeTrust(BRL) → End
+
+    orch->>signer: sign as sponsor<br>(ops Begin/End require sponsor auth)
+    signer-->>orch: sig_sponsor
+    orch->>orch: sign as sponsored<br>(CreateAccount + ChangeTrusts<br>require sponsored auth)
+
+    Note over orch: ⚠ Soroban contracts CANNOT interact with sponsorships —<br>the sandwich runs in the classic-tx layer<br>around any contract calls
+
+    orch->>rpc: sendTransaction(sandwich_tx)
+    rpc->>core: submit to ledger
+    core->>core: validate sponsor reserve liquidity
+    core->>core: AccountEntryExtensionV2.numSponsored++
+    core->>core: verify mutual-consent op balance
+    core-->>rpc: ledger close — tx success
+    rpc-->>orch: tx_hash + ledger_sequence
+
+    orch-->>api: account ready<br>(pk, sponsored_reserves ≈ 2 XLM)
+    api-->>fintech: 200 OK<br>trustlines: USDC, BRL
+    fintech-->>enterprise: account ready<br>can receive USDC + BRL<br>(zero XLM required)
+
+    Note over orch: ↻ if user self-funds → RevokeSponsorshipOp returns reserves to Bleu<br>↻ if Bleu off-boards → sponsorship transfers to a replacement sponsor (no user action)<br>per-user Bleu cost: ~2 XLM (~USD 0.20) until revoked
