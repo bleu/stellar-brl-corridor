@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    participant fintech as Fintech Integrator
+    participant api as Bleu API Gateway
+    participant ap_biz as AP Business Server
+    participant ap_sep as AP SEP Server
+    participant rfq as SEP-38 Rate-Lock<br>(Soroban)
+    participant anchor as BR Anchor<br>(BACEN FX-licensed)
+    participant sender as Sender Wallet
+    participant observer as AP Stellar Observer
+    participant usdc as USDC SAC<br>(Stellar Mainnet)
+    participant pix as PIX (BCB SPI)
+
+    fintech->>api: POST /quote (SEP-38)<br>sell=USDC, buy=iso4217:BRL, amount=100
+    api->>ap_sep: SEP-38 quote req
+    ap_sep->>anchor: upstream quote
+    anchor-->>ap_sep: price + fee.details[]<br>(incl. IOF disclosure)
+    ap_sep->>rfq: lock_quote(id,<br>expires_at_ledger = now + 180)
+    rfq-->>ap_sep: locked — emit<br>(quote_locked, id, anchor)
+    ap_sep-->>api: quote {id, expires_at,<br>total_price, fee.details[]}
+    api-->>fintech: 200 OK — quote_id<br>+ IOF disclosure
+
+    fintech->>api: POST /transactions (SEP-31)<br>quote_id, sender/receiver ids,<br>funding_method=PIX
+    api->>ap_sep: SEP-31 create
+    ap_sep->>ap_biz: JSON-RPC<br>request_offchain_funds
+    ap_biz-->>api: stellar_account + memo<br>+ amount USDC
+    api-->>fintech: transaction_id + deposit info
+
+    fintech->>sender: instruct USDC pay + stellar_memo
+    sender->>usdc: SAC transfer(USDC)
+    usdc->>observer: payment event
+    observer->>ap_biz: notify_onchain_funds_received
+    ap_biz-->>api: status=pending_receiver
+
+    ap_biz->>anchor: trigger PIX payout<br>(quote_id, BRL amount)
+    anchor->>pix: BRL via SPI
+    pix-->>anchor: PIX confirmed
+    anchor->>ap_biz: notify_offchain_funds_sent
+
+    ap_biz->>rfq: consume_quote(quote_id, tx_id)
+    rfq-->>ap_biz: emit (quote_use, id,<br>context=sep31, sep31_tx_id)<br>{price, total_price, fee_iof}
+    ap_biz-->>api: status=completed
+    api-->>fintech: webhook: completed

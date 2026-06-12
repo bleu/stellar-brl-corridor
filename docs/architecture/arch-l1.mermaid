@@ -1,0 +1,54 @@
+flowchart LR
+    subgraph actors[Actors]
+        enterprise["Enterprise Customer<br>importer · exporter · SMB<br>with cross-border flow"]
+        fintech["Fintech Integrator<br>RecargaPay · Efí · Plusdin · Dinie<br>embeds Bleu via SDK"]
+        fxop["FX / Remittance Operator<br>Husky · PagBrasil · Ebury · WTM<br>back-office upgrade"]
+        channel["Channel Partner<br>accountants · tax · wealth advisors<br>earns on-chain rev-share"]
+    end
+
+    bleu["Bleu Platform<br>BR/PIX corridor on Stellar<br>BR-configured Anchor Platform +<br>2 Soroban primitives<br>(+ card-collateral PoC on testnet)<br>MIT · open source"]
+
+    subgraph anchorrails[Anchor rails]
+        anchor["BR Stellar Anchor<br>BACEN FX-licensed (10-candidate pool)<br>offshore Stellar anchor = fallback<br>SEP-10 · SEP-12 · SEP-31 · SEP-38"]
+        pix["PIX<br>BCB SPI (via anchor)"]
+    end
+
+    subgraph byo[BYO adapters]
+        kyc["BYO KYC / KYB<br>Idwall · Unico · Truora ·<br>Onfido · Sumsub<br>(SEP-12 pass-through)"]
+        wallet["BYO Wallet / Custody<br>Freighter · LOBSTR · Vibrant<br>Fireblocks · BitGo · Anchorage<br>Dynamic · Privy · Turnkey<br>(Bleu holds no keys)"]
+    end
+
+    subgraph chain[Stellar mainnet]
+        stellar["Stellar Network<br>Soroban RPC + Horizon<br>SCP ~5s finality"]
+        usdc["USDC SAC<br>Circle-issued, native<br>AUTH_CLAWBACK_ENABLED<br>CAP-46-06 deterministic ID"]
+    end
+
+    card["Card Network / Issuer / Processor<br>Visa · Mastercard · BIN sponsor · EMI<br>(Monavate-pattern · offchain)<br>card-collateral PoC only"]
+
+    oz["OpenZeppelin Stellar Contracts<br>stellar-contracts =0.7.1 · MIT<br>audited · SDF collaboration<br>(build-time dep)"]
+
+    enterprise -- "payment / payout<br>REST + webhook" --> bleu
+    fintech -- "SDK (TS/Python)<br>SEP-31 quote_id flow" --> bleu
+    fxop -- "orchestrator<br>BRL ↔ USDC" --> bleu
+    channel -- "partner_transfer<br>event rev-share" --> bleu
+
+    bleu -- "SEP-10/12/31/38<br>JSON-RPC callbacks" --> anchor
+    bleu -- "SEP-12 PUT /customer" --> kyc
+    bleu -- "external signing<br>(no-key posture)" --> wallet
+    anchor -- "BRL cash-out (SPI)" --> pix
+
+    bleu -- "Prepare → Sign → Submit<br>simulateTx · sendTx · getEvents" --> stellar
+    bleu -- "SAC transfer / transfer_from" --> usdc
+    usdc -. "runs on" .-> stellar
+
+    bleu -- "issuer-API adapter (PoC)<br>auth · capture · refund<br>(offchain webhooks)" --> card
+    card -- "auth decisions<br>settlement feed" --> bleu
+
+    oz -. "composes: sac_admin_wrapper ·<br>access_control (admin auth, all 3) ·<br>pausable (card PoC) ·<br>SmartAccount + policies (production vault)" .-> bleu
+
+    classDef bleuNode fill:#2563eb,stroke:#1e40af,color:#fff
+    classDef chainNode fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef buildDep fill:#fef3c7,stroke:#ca8a04,color:#713f12
+    class bleu bleuNode
+    class stellar,usdc chainNode
+    class oz buildDep

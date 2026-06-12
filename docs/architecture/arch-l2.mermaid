@@ -1,0 +1,90 @@
+flowchart TB
+    users_ent["Enterprise / Fintech / FX Op"]
+    users_chan["Channel Partner"]
+    users_admin["Bleu Admin"]
+
+    subgraph bleup[Bleu Platform]
+        subgraph pub[Public VPC]
+            gateway["API Gateway<br>Kong · TLS · rate-limit"]
+            dashboard["Enterprise Dashboard<br>React + Vite"]
+            console["Partner Console<br>React + Vite"]
+        end
+
+        subgraph priv[Private VPC]
+            orch["Orchestrator Service<br>Node.js + TypeScript<br>Prepare → Sign → Submit<br>fee-bump ×10 retries"]
+            ap_sep["Anchor Platform — SEP Server<br>Java · SDF reference<br>SEP-10/12/24/31/38"]
+            ap_biz["AP Business Server<br>Node.js + TypeScript<br>SEP-31 JSON-RPC actions<br>IOF in fee.details[]<br>+ batched payout glue<br>(Vec&lt;PayoutEntry&gt;, fee-bump ×10)"]
+            kyc_proxy["KYC / KYB Proxy<br>SEP-12 shim to Idwall · Unico ·<br>Truora · Onfido · Sumsub"]
+            rpc["Stellar RPC + Horizon<br>simulateTx · sendTx · getEvents<br>CAP-33 sponsor-sandwich"]
+            indexer["Soroban Event Indexer<br>Postgres sink · OSS template<br>bridges RPC 24h → long-term"]
+            card_adapter["Card Issuer Adapter<br>Node.js + TypeScript (testnet PoC)<br>ingests auth · capture · refund<br>webhooks → vault.reserve /<br>settle / release invocations<br>(Gnosis Pay hybrid pattern,<br>offchain by necessity)"]
+        end
+
+        subgraph sec[Secure VPC]
+            rds[("Postgres (RDS)<br>quote state · partner config<br>event log")]
+            redis[("Redis<br>quote cache · rate-limit<br>inflight tx dedup")]
+            s3[("S3<br>KYC binaries · artifacts<br>audit logs")]
+        end
+    end
+
+    subgraph sc["Soroban contracts (attr + rfq mainnet-bound, audit-bound · vault = testnet PoC)"]
+        attr["Partner-Attribution Wrapper<br>mainnet-bound · audit-bound<br>OZ sac_admin_wrapper + access_control<br>partner_transfer event<br>invariant Σ bps ≤ 10_000"]
+        rfq["SEP-38 Rate-Lock<br>mainnet-bound · audit-bound<br>custom Soroban<br>Temporary storage (CAP-46-12)<br>admin auth via OZ access_control<br>(quote_use, quote_id, context,<br>sep31_tx_id) events"]
+        vault["Card-Collateral Vault<br>TESTNET PoC — off critical path<br>OZ pausable + access_control<br>admin-gated reserve / settle / release<br>(production vault adds SmartAccount +<br>spending_limit + webauthn / ed25519)<br>USDC yield only (never XLM)"]
+        usdc["USDC SAC<br>Circle · CAP-46-06<br>AUTH_CLAWBACK_ENABLED"]
+    end
+
+    anchor["BACEN FX-licensed BR anchor<br>(10-candidate pool · offshore fallback)<br>upstream SEP-31 + SEP-38<br>PIX BRL rail"]
+    fb["Fireblocks (mainnet) /<br>self-custody (testnet)<br>external signer"]
+    card_proc["Card Processor / Issuer / BIN<br>Visa · Mastercard rails<br>Monavate-pattern EMI<br>(offchain; not on Stellar)<br>card PoC only"]
+    oz_dep["OpenZeppelin Stellar Contracts<br>stellar-contracts =0.7.1 (MIT)<br>build-time dependency"]
+
+    users_ent -- HTTPS --> dashboard
+    users_ent -- REST --> gateway
+    users_chan -- HTTPS --> console
+    users_admin --> dashboard
+
+    gateway --> orch
+    gateway --> ap_sep
+
+    ap_sep -- "Platform API<br>JWT-signed" --> ap_biz
+    ap_biz --> kyc_proxy
+    orch --> rpc
+    indexer -- "getEvents paginated" --> rpc
+
+    orch --> rds
+    orch --> redis
+    ap_biz --> rds
+    kyc_proxy --> s3
+    indexer -- "events sink" --> rds
+
+    rpc --> attr
+    rpc --> rfq
+    rpc -. "testnet PoC" .-> vault
+
+    attr -- "transfer_from (SEP-41)" --> usdc
+    vault -. "transfer_from<br>(allowance, production vault)" .-> usdc
+
+    ap_sep -- "upstream SEP-31/38" --> anchor
+    orch -- "external signer" --> fb
+    anchor -. "BRL ↔ USDC settlement" .-> usdc
+
+    card_proc -- "auth · capture · refund<br>webhooks (HTTPS)" --> card_adapter
+    card_adapter -- "vault.reserve /<br>vault.settle /<br>vault.release" --> rpc
+
+    oz_dep -. "build-time composition<br>(not a runtime call)" .-> sc
+
+    classDef frontend fill:#60a5fa,stroke:#1e40af,color:#fff
+    classDef service fill:#6366f1,stroke:#312e81,color:#fff
+    classDef soroban fill:#16a34a,stroke:#14532d,color:#fff
+    classDef sorobanPoc fill:#86efac,stroke:#14532d,color:#14532d,stroke-dasharray:3
+    classDef datastore fill:#d97706,stroke:#78350f,color:#fff
+    classDef external fill:#e2e8f0,stroke:#64748b,color:#1e293b
+    classDef buildDep fill:#fef3c7,stroke:#ca8a04,color:#713f12
+    class gateway,dashboard,console frontend
+    class orch,ap_sep,ap_biz,kyc_proxy,rpc,indexer,card_adapter service
+    class attr,rfq soroban
+    class vault sorobanPoc
+    class rds,redis,s3 datastore
+    class anchor,fb,card_proc,usdc external
+    class oz_dep buildDep

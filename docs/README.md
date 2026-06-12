@@ -20,4 +20,4 @@ Docs for the Bleu BRL/PIX corridor on Stellar — [SCF #44](https://communityfun
 
 ## Diagrams
 
-All C4 diagrams are inline [Mermaid](https://mermaid.js.org) in [architecture/README.md](architecture/README.md) (GitHub renders them natively): L1 system context · L2 containers · L3 SEP-31 + SEP-38 + IOF flow · L3 CAP-33 sponsor-sandwich onboarding · L3 card-collateral authorization. `scripts/check_docs.sh` validates every block with mermaid-cli.
+All C4 diagrams are [Mermaid](https://mermaid.js.org) files (`architecture/*.mermaid`, rendered natively by GitHub), linked from [architecture/README.md](architecture/README.md): L1 system context · L2 containers · L3 SEP-31 + SEP-38 + IOF flow · L3 CAP-33 sponsor-sandwich onboarding · L3 card-collateral authorization.
