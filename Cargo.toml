@@ -15,6 +15,7 @@ members = [
     "contracts/fx-rate-lock",
     "contracts/partner-attribution",
     "contracts/card-collateral-poc",
+    "contracts/delay-module",
 ]
 
 [workspace.package]

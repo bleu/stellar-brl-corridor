@@ -76,7 +76,10 @@ deploy() {
 
 deploy "fx-rate-lock"        "bleu_fx_rate_lock.wasm"        "," --admin "$ADMIN"
 deploy "partner-attribution" "bleu_partner_attribution.wasm" "," --admin "$ADMIN" --usdc_sac "$USDC_SAC"
-deploy "card-collateral-poc" "bleu_card_collateral_poc.wasm" ""  --admin "$ADMIN"
+deploy "card-collateral-poc" "bleu_card_collateral_poc.wasm" "," --admin "$ADMIN"
+# Delay module has no admin by design; cooldown/expiration are the ADR-0001
+# defaults (3 min / 30 min), overridable via env for non-default instances.
+deploy "delay-module"        "bleu_delay_module.wasm"        ""  --cooldown_secs "${DELAY_COOLDOWN_SECS:-180}" --expiration_secs "${DELAY_EXPIRATION_SECS:-1800}"
 
 echo "  }" >>"$OUT"
 echo "}" >>"$OUT"
