@@ -38,9 +38,15 @@ All docs live in [`docs/`](docs/) — index: [`docs/README.md`](docs/README.md).
 
 ## Architecture
 
-See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthrough (L2 containers + L3 sequences). System context (C4 L1):
+See [`docs/architecture/`](docs/architecture/README.md) for the full C4 walkthrough. Quick view:
 
-Diagram: [`docs/architecture/arch-l1.mermaid`](docs/architecture/arch-l1.mermaid) — GitHub renders it natively.
+| Level | Diagram |
+| --- | --- |
+| L1 — System Context | [`arch-l1.mermaid`](docs/architecture/arch-l1.mermaid) |
+| L2 — Containers | [`arch-l2.mermaid`](docs/architecture/arch-l2.mermaid) |
+| L3 — SEP-31 + SEP-38 + IOF flow | [`arch-l3-sep31-flow.mermaid`](docs/architecture/arch-l3-sep31-flow.mermaid) |
+| L3 — CAP-33 sponsor-sandwich onboarding | [`arch-l3-onboarding.mermaid`](docs/architecture/arch-l3-onboarding.mermaid) |
+| L3 — Card-collateral authorization (testnet PoC) | [`arch-l3-card-auth.mermaid`](docs/architecture/arch-l3-card-auth.mermaid) |
 
 ## What's in this repo
 

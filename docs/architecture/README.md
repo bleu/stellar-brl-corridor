@@ -59,7 +59,7 @@ Fintechs, FX operators, and channel partners consume the stack via REST API, Typ
 
 ### 2.2 C4 L1 — System Context
 
-Diagram: [`arch-l1.mermaid`](arch-l1.mermaid) — GitHub renders it natively.
+Diagram: [`arch-l1.mermaid`](arch-l1.mermaid)
 
 Actors: **Enterprise Customer**, **Fintech Integrator**, **FX / Remittance Operator**, **Channel Partner** (earning rev-share via `partner_transfer` events).
 
@@ -69,7 +69,7 @@ Build-time dependency (composed today): **OpenZeppelin Stellar Contracts** (`ste
 
 ### 2.3 C4 L2 — Containers
 
-Diagram: [`arch-l2.mermaid`](arch-l2.mermaid) — GitHub renders it natively.
+Diagram: [`arch-l2.mermaid`](arch-l2.mermaid)
 
 Three zones inside the Bleu Platform boundary:
 
@@ -83,7 +83,7 @@ Outside the boundary: the **two** mainnet Soroban contracts (attribution + rate-
 
 #### 2.4.1 SEP-31 + SEP-38 + IOF flow
 
-Diagram: [`arch-l3-sep31-flow.mermaid`](arch-l3-sep31-flow.mermaid) — GitHub renders it natively.
+Diagram: [`arch-l3-sep31-flow.mermaid`](arch-l3-sep31-flow.mermaid)
 
 If the quote expires before settlement, Temporary-storage death (CAP-46-12) is the enforcement mechanism — see [§2.1](#21-flow--sep-31-b2b-pix-receive-with-sep-38-firm-quote).
 
@@ -91,13 +91,13 @@ If the quote expires before settlement, Temporary-storage death (CAP-46-12) is t
 
 This sequence depicts the **production** card-collateral vault target (SmartAccount / webauthn / spending-limit policy / USDC settlement, CAP-21/23). The shipped testnet PoC ([`contracts/card-collateral-poc`](../../contracts/card-collateral-poc)) implements only the admin-gated reserve/settle/release state machine + shortfall accounting, composing OZ `pausable` + `access_control`; it does not call USDC or `do_check_auth`.
 
-Diagram: [`arch-l3-card-auth.mermaid`](arch-l3-card-auth.mermaid) — GitHub renders it natively.
+Diagram: [`arch-l3-card-auth.mermaid`](arch-l3-card-auth.mermaid)
 
 Yield, where present, accrues on **USDC** collateral — never on XLM.
 
 #### 2.4.3 CAP-33 sponsor-sandwich onboarding
 
-Diagram: [`arch-l3-onboarding.mermaid`](arch-l3-onboarding.mermaid) — GitHub renders it natively.
+Diagram: [`arch-l3-onboarding.mermaid`](arch-l3-onboarding.mermaid)
 
 The atomic five-operation transaction that creates a zero-XLM-ready account: `BeginSponsoringFutureReservesOp` → `CreateAccountOp` → `ChangeTrustOp(USDC)` → `ChangeTrustOp(BRL)` → `EndSponsoringFutureReservesOp`, with dual signatures for mutual consent. The constraint that governs the whole onboarding path: **Soroban contracts cannot interact with sponsorships**, so the sandwich runs at the classic-tx layer around any contract calls.
 
