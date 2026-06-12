@@ -126,6 +126,7 @@ CI uploads the release-mode Wasm as an artifact on every build (`contracts-wasm`
 | `fx-rate-lock` | `CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDZLXRAWDHU6JLDAU5PRTYC3NNXWRWXIDTPJNOTIHIMLVAPSA5JONVRW) |
 | `partner-attribution` | `CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDBUJYLO5TUXGU5VSQGULB2GXNJ2NPLKI6IPUCFBK774KPHNV22K53YR) |
 | `card-collateral-poc` | `CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT` | **testnet PoC only** | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CC7HSHXJBWCVA7PQH7GW2QASVACOYYCOZNCKDQGYM7LOIQ3C2T6WH2WT) |
+| `delay-module` | `CAA47ICIUOVQEHZFIUJFBJYCWF6WJBLIYRRN4AJVHT5O7LNZ2LN7R72S` | `[post-audit, T3]` | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CAA47ICIUOVQEHZFIUJFBJYCWF6WJBLIYRRN4AJVHT5O7LNZ2LN7R72S) |
 
 ## Roadmap
 
@@ -140,7 +141,7 @@ Full proposal lives in our team brain (private). Public summary in [`docs/grant.
 
 SEP-1, SEP-9, SEP-10, SEP-12 (BR custom fields), SEP-24, SEP-31, SEP-38, SEP-41 · CAP-33 (sponsored reserves), CAP-35 (asset clawback inherited from USDC), CAP-46-06 (deterministic USDC SAC), CAP-46-12 (Temporary storage). Full coverage matrix in [`docs/sep-cap-coverage.md`](docs/sep-cap-coverage.md).
 
-All three contracts compose **OpenZeppelin's audited `stellar-contracts =0.7.1`** (`stellar_access::access_control` — admin auth on all three; `stellar_tokens::fungible::sac_admin_wrapper`; `stellar_contract_utils::pausable`) on top of `soroban-sdk`. OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pins `soroban-sdk =25.3.0`. Composing audited building blocks shrinks the novel surface that needs Bleu's own audit — it does not make these contracts audited (audit is the T3 deliverable).
+The delay-module policy contract is a deliberate exception to the admin pattern below: it has **no admin role at all** — nobody, including Bleu, can cancel a user's queued operation — so it composes no access-control building block. The other three contracts compose **OpenZeppelin's audited `stellar-contracts =0.7.1`** (`stellar_access::access_control` — admin auth on all three; `stellar_tokens::fungible::sac_admin_wrapper`; `stellar_contract_utils::pausable`) on top of `soroban-sdk`. OZ 0.7.1 requires `soroban-sdk ^25.3.0`, so the workspace pins `soroban-sdk =25.3.0`. Composing audited building blocks shrinks the novel surface that needs Bleu's own audit — it does not make these contracts audited (audit is the T3 deliverable).
 
 ## Contributing
 

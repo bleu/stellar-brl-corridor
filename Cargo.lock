@@ -206,6 +206,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bleu-delay-module"
+version = "0.0.1"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "bleu-fx-rate-lock"
 version = "0.0.1"
 dependencies = [

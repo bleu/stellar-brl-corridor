@@ -16,6 +16,7 @@ members = [
     "contracts/partner-attribution",
     "contracts/card-collateral-poc",
     "contracts/card-collateral",
+    "contracts/delay-module",
 ]
 
 [workspace.package]

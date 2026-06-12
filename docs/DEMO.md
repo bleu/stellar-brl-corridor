@@ -164,6 +164,46 @@ stellar contract invoke --id CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGO
 
 ---
 
+## 4. Delay module — queue → cooldown → execute, and the cancel path
+
+The delay-queue policy contract behind the card-spend safety model
+([`docs/architecture/delay-module.md`](architecture/delay-module.md)): a
+user-initiated operation queues, becomes executable only after the cooldown
+(3 min on this instance), and is void after the execution window (30 min).
+Run captured 2026-06-11 against
+[`CAA47ICI…R72S`](https://stellar.expert/explorer/testnet/contract/CAA47ICIUOVQEHZFIUJFBJYCWF6WJBLIYRRN4AJVHT5O7LNZ2LN7R72S),
+signed by the cardholder identity — the contract has **no admin**, so every
+mutation below is user-signed.
+
+**Queue a 5 USDC outbound transfer:**
+
+```bash
+stellar contract invoke --id CAA47ICIUOVQEHZFIUJFBJYCWF6WJBLIYRRN4AJVHT5O7LNZ2LN7R72S \
+  --source demo-cardholder --network testnet -- \
+  queue --user $(stellar keys address demo-cardholder) \
+  --kind Transfer --amount 50000000 --payload beef
+```
+
+- queue → [`11d45956…`](https://stellar.expert/explorer/testnet/tx/11d459564d1879cf6139b4e77ae6f2969c4e231c00fb83664a337d2f81e65273) — event `entry_queued` (id 0, `executable_at` / `expires_at` in payload), returns `0`
+
+**Execute during the cooldown — rejected:**
+
+```bash
+stellar contract invoke --id CAA47ICI… --source demo-cardholder --network testnet -- execute --id 0
+# ❌ transaction simulation failed: HostError: Error(Contract, #4)   (CooldownNotElapsed)
+```
+
+**Execute after the 3-minute cooldown — succeeds:**
+
+- execute → [`d92e1580…`](https://stellar.expert/explorer/testnet/tx/d92e1580377346c32577c902a9b81818c25fa18bfbeb2d9b1db720ff5962a83a) — event `entry_executed`, returns the entry (payload included) and removes it from the queue
+
+**Cancel path (a queued config change, cancelled by its own user):**
+
+- queue `ConfigChange` → [`19cfa306…`](https://stellar.expert/explorer/testnet/tx/19cfa3065502ad8b51fa5a5df24aa0d7d244701bba5e6764cef2b2ca892d4770) — event `entry_queued` (id 1, amount 0)
+- cancel → [`55c42d78…`](https://stellar.expert/explorer/testnet/tx/55c42d78af31cc895490023f6ddbf0061c382300bce78a79300330bbf1f474dc) — event `entry_cancelled`; only the queuing user can sign this, there is no admin override
+
+---
+
 ## Summary — key tx to cite
 
 | Primitive | Key operation | Tx | Event |
@@ -172,6 +212,7 @@ stellar contract invoke --id CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGO
 | FX rate-lock | `consume_quote` | [`cd510591…`](https://stellar.expert/explorer/testnet/tx/cd5105914d7b813007a1fbdb9609fe8b8623b9e7a76059ed227ac967e6c769c4) | `quote_use` |
 | Card-collateral | `settle` (covered) | [`69435816…`](https://stellar.expert/explorer/testnet/tx/694358160e3e1c259ff5c3b0057ed428518025b45765f2fdf013e46081c99f89) | `card_settle` |
 | Card-collateral | `settle` (shortfall) | [`bb6f3ac3…`](https://stellar.expert/explorer/testnet/tx/bb6f3ac3fb4e7ad32ea20f7b55ef2139d41542755f4fdf3688ce7f44ea7eb803) | `shortfall` |
+| Delay module | `execute` (after 3-min cooldown) | [`d92e1580…`](https://stellar.expert/explorer/testnet/tx/d92e1580377346c32577c902a9b81818c25fa18bfbeb2d9b1db720ff5962a83a) | `entry_executed` |
 
 ---
 
