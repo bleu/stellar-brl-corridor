@@ -46,6 +46,13 @@ workspace.
   (justfile + CI), required because OZ 0.7.1 enables soroban-sdk's
   `experimental_spec_shaking_v2` feature.
 - Wasm target pinned to `wasm32v1-none` (Rust ≥ 1.84 requirement for Soroban).
+- **Demo GIF re-recorded as a `just demo` excerpt** (2026-06-12):
+  `docs/media/demo.tape` → `demo-testnet.gif` replaces the old SDK-example
+  capture (`sdk-live.tape` / `sdk-live-testnet.gif`). The GIF films partner
+  mint → `set_partner` ×2 → `settle_split` printing its tx hash; the run
+  completes off-camera and rewrites `deployments/testnet-demo.json`, from
+  which every tx link in `docs/DEMO.md` / `docs/REVIEWERS.md` is synced — the
+  hash visible in the GIF is the same transaction the docs link.
 
 ## [0.0.1] — 2026-05-27
 

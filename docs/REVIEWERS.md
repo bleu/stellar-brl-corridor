@@ -18,13 +18,11 @@ Deployed addresses + explorer links: [`deployments/testnet.json`](../deployments
 Full walkthrough with every transaction: [`docs/DEMO.md`](DEMO.md). The flagship:
 
 - **Atomic B2B2B revenue split** — `settle_split` moved real USDC, split 30%/20% to two partners, emitted two `partner_transfer` events:
-  [tx `d03dec96…`](https://stellar.expert/explorer/testnet/tx/d03dec96b07bdf664ea4136ea72a043838825a00e3691e90ce5cd01c21cfafd6)
-- **FX firm-quote consume** (`quote_use`, price invariant held on-chain): [tx `cd510591…`](https://stellar.expert/explorer/testnet/tx/cd5105914d7b813007a1fbdb9609fe8b8623b9e7a76059ed227ac967e6c769c4)
-- **Card settle + shortfall event**: [tx `69435816…`](https://stellar.expert/explorer/testnet/tx/694358160e3e1c259ff5c3b0057ed428518025b45765f2fdf013e46081c99f89) · [tx `bb6f3ac3…`](https://stellar.expert/explorer/testnet/tx/bb6f3ac3fb4e7ad32ea20f7b55ef2139d41542755f4fdf3688ce7f44ea7eb803)
+  [tx `c8b95270…`](https://stellar.expert/explorer/testnet/tx/c8b95270f602384a79254723a6a23879120012ce49d7bb16c3b3d2f9f7f0978c)
+- **FX firm-quote consume** (`quote_use`, price invariant held on-chain): [tx `73bef0ce…`](https://stellar.expert/explorer/testnet/tx/73bef0ce69c797d0e6334b62572e06dd8338ea2708f109ca435c2db80c8a8150)
+- **Card settle + shortfall event**: [tx `49f506c9…`](https://stellar.expert/explorer/testnet/tx/49f506c9a9a322e8672e667b75ebdfe34312a14ba34263e9c5fd84e1b02d4389) · [tx `17425f22…`](https://stellar.expert/explorer/testnet/tx/17425f2273c7c8e409d14f3e289c308e1b137cdd8ff94032c74e29f468f3e0f0)
 
 ## 3. Run it yourself
-
-![SDK reading live testnet state](media/sdk-live-testnet.gif)
 
 ```bash
 git clone git@github.com:bleu/stellar-brl-corridor.git && cd stellar-brl-corridor
@@ -45,6 +43,10 @@ just ap-up && just ap-check   # boot the BR Anchor Platform; serves SEP-1 stella
 just deploy-testnet   # generates a fresh bleu-deployer key + funds it via friendbot, deploys all three contracts
 just demo             # runs every primitive against your newly deployed contracts, prints a clickable tx hash per step
 ```
+
+![just demo opening: settle_split moving real USDC 30/20 on testnet](media/demo-testnet.gif)
+
+> `just demo` opening, recorded against the canonical deployment: partner mint → `set_partner` ×2 → `settle_split` printing its tx hash. The run continues through all 12 steps — the captured record is [`deployments/testnet-demo.json`](../deployments/testnet-demo.json), and the §2 hashes above link into it.
 
 `just deploy-testnet` creates the `bleu-deployer` keystore entry automatically if it doesn't exist — no pre-setup needed. The demo is self-contained against whatever addresses `just deploy-testnet` writes to `deployments/testnet.json`.
 

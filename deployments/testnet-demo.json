@@ -1,7 +1,7 @@
 {
   "network": "testnet",
-  "run": "20260611165753",
-  "ran_at": "2026-06-11T17:00:03Z",
+  "run": "20260612172742",
+  "ran_at": "2026-06-12T17:30:13Z",
   "admin": "GAQH34BVB4SEEI4DNKIJQI6BTCNFJVO7AWC4SGQHV23UVRNLIZEL7NLI",
   "usdc_sac": "CBQAJM5AF5MLNFWLYR7USHOINGL2P7SGYW2BZUEMDR4HVQWN7FMZDO7D",
   "contracts": {
@@ -22,84 +22,84 @@
       "step": "partner.mint",
       "fn": "mint",
       "contract": "CBQAJM5AF5MLNFWLYR7USHOINGL2P7SGYW2BZUEMDR4HVQWN7FMZDO7D",
-      "tx_hash": "bc1c2d29967e90741aaa9164c98336f1fbdda0e79da029a9553407a0f3589aea",
+      "tx_hash": "c13cd3cf93c10bf41ae1a7a20e4398f985474ac94ec66dcd6a4b2beb970ecebf",
       "ret": ""
     },
     {
       "step": "partner.set_a",
       "fn": "set_partner",
       "contract": "CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM23OFB",
-      "tx_hash": "8140e9f58632b5d8f33620f78c6790955e01c2cc1bc92e0a41dbf70ec76d7827",
+      "tx_hash": "d2a1f310db0937a1fbe9e978ea323602b381d0960368a552ac20c25b4bb00815",
       "ret": "null"
     },
     {
       "step": "partner.set_b",
       "fn": "set_partner",
       "contract": "CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM23OFB",
-      "tx_hash": "9f0614dc74dcabff818d24f0410dd8f26fb606a094b31105247cd7cce990deed",
+      "tx_hash": "a3ef1636f15151d2a86ecb2edb712522b81aaa4d6257f3b9a08050305173bcdd",
       "ret": "null"
     },
     {
       "step": "partner.settle_split",
       "fn": "settle_split",
       "contract": "CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM23OFB",
-      "tx_hash": "47414d2dc58304a7616a786c729bd9e7b023f6524133b437b0d119810067884d",
+      "tx_hash": "c8b95270f602384a79254723a6a23879120012ce49d7bb16c3b3d2f9f7f0978c",
       "ret": "500000000"
     },
     {
       "step": "fx.lock_quote",
       "fn": "lock_quote",
       "contract": "CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3UG2AI",
-      "tx_hash": "c1555a54c920a6211d82df52355ca6a4e1612bd6454653eead5106dcfe174ea4",
-      "ret": "3037082"
+      "tx_hash": "7c61c5c944dd3899d1ae36b20551e90a6cae0af6d1b57bd431248e870be4e6e2",
+      "ret": "3054697"
     },
     {
       "step": "fx.consume_quote",
       "fn": "consume_quote",
       "contract": "CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3UG2AI",
-      "tx_hash": "5ce177e1afbdda016a03b948d5b57a2ad9699f47895066b487ee06fb67f0135a",
+      "tx_hash": "73bef0ce69c797d0e6334b62572e06dd8338ea2708f109ca435c2db80c8a8150",
       "ret": "null"
     },
     {
       "step": "card.reserve",
       "fn": "reserve",
       "contract": "CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV",
-      "tx_hash": "82c213460ae60fd7ec91ad212af05d5442d277f0ef60e9433c58e6116bc81c8d",
+      "tx_hash": "0f19d9c50d7333e5a9685510b1aabd447096d66ac88be9042b656c9ee4c656d3",
       "ret": "null"
     },
     {
       "step": "card.settle_partial",
       "fn": "settle",
       "contract": "CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV",
-      "tx_hash": "53ac6ca99fd63bb1aa6562f938e0d68c71312194129a07cdd141384628efdc51",
+      "tx_hash": "49f506c9a9a322e8672e667b75ebdfe34312a14ba34263e9c5fd84e1b02d4389",
       "ret": "0"
     },
     {
       "step": "card.release",
       "fn": "release",
       "contract": "CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV",
-      "tx_hash": "55258784d8e12e0aedf2a29bf37a1953e3e062269364779c3baabb5669ab197f",
+      "tx_hash": "30c1fd653c3e2dd5067c5f3feff71f2fe37efe820632f923871fd6ccad21410a",
       "ret": "200000000"
     },
     {
       "step": "card.reserve_short",
       "fn": "reserve",
       "contract": "CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV",
-      "tx_hash": "919fb8e9b36253c1a8baff96a541195de0c830cf39a05e56c0693c19e28c42db",
+      "tx_hash": "0a50a941f9f2dac0d4b09df5398bd89b345242f1030d3f0e66a3e3f3013b984f",
       "ret": "null"
     },
     {
       "step": "card.settle_shortfall",
       "fn": "settle",
       "contract": "CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV",
-      "tx_hash": "0c05c2d6a59bfcbb0d4248b84a73c954bfc6274357e5642d8a5b58b4ba0bf715",
+      "tx_hash": "17425f2273c7c8e409d14f3e289c308e1b137cdd8ff94032c74e29f468f3e0f0",
       "ret": "40000000"
     },
     {
       "step": "card.release_short",
       "fn": "release",
       "contract": "CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGOIFRWV",
-      "tx_hash": "15d817132d0ecc6e77ef998263d4743f0ba6acb3b60f06865ad429281860d51f",
+      "tx_hash": "2e3ef38805943ec6d0c6a0e520d0de6df9a18aea26a51667adc3f3059bfc1359",
       "ret": "0"
     }
   ]

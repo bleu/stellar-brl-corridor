@@ -14,7 +14,7 @@ run with `just demo`.
 - **Network:** testnet
 - **Admin / deployer (also USDC issuer):** `GAQH34BVB4SEEI4DNKIJQI6BTCNFJVO7AWC4SGQHV23UVRNLIZEL7NLI`
 - **Testnet USDC SAC:** [`CBQAJM5A…ZDO7D`](https://stellar.expert/explorer/testnet/contract/CBQAJM5AF5MLNFWLYR7USHOINGL2P7SGYW2BZUEMDR4HVQWN7FMZDO7D)
-- **Run captured:** 2026-06-10 against the 2026-06-05 deployment (machine-readable record: [`deployments/testnet-demo.json`](../deployments/testnet-demo.json))
+- **Run captured:** 2026-06-12 against the 2026-06-05 deployment (machine-readable record: [`deployments/testnet-demo.json`](../deployments/testnet-demo.json)) — the same run filmed in the README/REVIEWERS `just demo` GIF
 
 Reproduce: `just demo` (or `scripts/demo_testnet.sh`). The script is idempotent
 — quote ids and card-auth ids are derived from a per-run tag, so re-runs land
@@ -50,8 +50,8 @@ stellar contract invoke --id CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM
   set_partner --partner <B> --fee_bps 2000 --payout <B> --domain fxoperator
 ```
 
-- set A (3000 bps) → [`71afa4cc…`](https://stellar.expert/explorer/testnet/tx/71afa4cc88ade4d573e09c3d41b71bd19e5df1b75e9463fd7b33126909327192) — event `partner_set`, `total_bps` → 5000
-- set B (2000 bps) → [`23ac5a7f…`](https://stellar.expert/explorer/testnet/tx/23ac5a7f43b1a3f88d167d7c6954520d80bf7e6133d2ba560e6f389d0dea9409) — event `partner_set`, `total_bps` → 5000
+- set A (3000 bps) → [`d2a1f310…`](https://stellar.expert/explorer/testnet/tx/d2a1f310db0937a1fbe9e978ea323602b381d0960368a552ac20c25b4bb00815) — event `partner_set`, `total_bps` → 5000
+- set B (2000 bps) → [`a3ef1636…`](https://stellar.expert/explorer/testnet/tx/a3ef1636f15151d2a86ecb2edb712522b81aaa4d6257f3b9a08050305173bcdd) — event `partner_set`, `total_bps` → 5000
 
 **The split — settle a 100 USDC flow:**
 
@@ -65,7 +65,7 @@ stellar contract invoke --id CCXSXAM7KLACDCD2UDBM37BFTZZYATPTN4WFXJASIEGZ4ZO44CM
   --tx_hash <sep31-tx-hash>
 ```
 
-- **tx:** [`d03dec96…`](https://stellar.expert/explorer/testnet/tx/d03dec96b07bdf664ea4136ea72a043838825a00e3691e90ce5cd01c21cfafd6)
+- **tx:** [`c8b95270…`](https://stellar.expert/explorer/testnet/tx/c8b95270f602384a79254723a6a23879120012ce49d7bb16c3b3d2f9f7f0978c)
 - **events:** two `partner_transfer` + two SEP-41 `transfer` (standard token events wallets/explorers see)
 - **return:** `500000000` (50 USDC total paid to partners; residual stays with the settlement account)
 - **observable effect:** partner A USDC balance **+300000000** (30 USDC), partner B **+200000000** (20 USDC) — exactly the 30% / 20% split of the 100 USDC flow, asserted live by the script against the SAC `balance`.
@@ -95,7 +95,7 @@ stellar contract invoke --id CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3
   --ttl_ledgers 120
 ```
 
-- **tx:** [`6c117f68…`](https://stellar.expert/explorer/testnet/tx/6c117f6899d1c33f00317fe0623a567580d87917e19f3c767179378a1f102466)
+- **tx:** [`7c61c5c9…`](https://stellar.expert/explorer/testnet/tx/7c61c5c944dd3899d1ae36b20551e90a6cae0af6d1b57bd431248e870be4e6e2)
 - **event:** `quote_locked` (`expires_at_ledger`, `fee_iof: 191`)
 - **observable effect:** `is_active(quote_id)` → `true`.
 
@@ -107,7 +107,7 @@ stellar contract invoke --id CCF7U43LBCHURKKHEHLBWUUZKNPFWQUQTESJLFWWVHCNKZKQMG3
   consume_quote --quote_id <quote-id> --sep31_tx_id <sep31-tx-id>
 ```
 
-- **tx:** [`cd510591…`](https://stellar.expert/explorer/testnet/tx/cd5105914d7b813007a1fbdb9609fe8b8623b9e7a76059ed227ac967e6c769c4)
+- **tx:** [`73bef0ce…`](https://stellar.expert/explorer/testnet/tx/73bef0ce69c797d0e6334b62572e06dd8338ea2708f109ca435c2db80c8a8150)
 - **event:** `quote_use` (`price: 530`, `fee_iof: 191`)
 - **observable effect:** `is_active(quote_id)` → `false` — the one-shot `consumed`
   flag is set, so any second settlement against the same quote is rejected. This
@@ -142,9 +142,9 @@ stellar contract invoke --id CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGO
   release --auth_id <auth-id>
 ```
 
-- reserve 50 USDC → [`289a28dc…`](https://stellar.expert/explorer/testnet/tx/289a28dc5fc95e1a4f91f670a3f955383eb29ab5340312c6b49af2561b533f94) — event `collateral_locked`
-- settle 30 USDC → [`69435816…`](https://stellar.expert/explorer/testnet/tx/694358160e3e1c259ff5c3b0057ed428518025b45765f2fdf013e46081c99f89) — event `card_settle`, returns shortfall `0` (fully covered)
-- release → [`5f61d765…`](https://stellar.expert/explorer/testnet/tx/5f61d765c2ed11eece468d808fbe05d8a34e38c3c76f892f2ee97010acddf23e) — event `collateral_released`, returns `200000000` (20 USDC unused remainder freed)
+- reserve 50 USDC → [`0f19d9c5…`](https://stellar.expert/explorer/testnet/tx/0f19d9c50d7333e5a9685510b1aabd447096d66ac88be9042b656c9ee4c656d3) — event `collateral_locked`
+- settle 30 USDC → [`49f506c9…`](https://stellar.expert/explorer/testnet/tx/49f506c9a9a322e8672e667b75ebdfe34312a14ba34263e9c5fd84e1b02d4389) — event `card_settle`, returns shortfall `0` (fully covered)
+- release → [`30c1fd65…`](https://stellar.expert/explorer/testnet/tx/30c1fd653c3e2dd5067c5f3feff71f2fe37efe820632f923871fd6ccad21410a) — event `collateral_released`, returns `200000000` (20 USDC unused remainder freed)
 
 **Shortfall race — reserve 10 USDC, clearing comes in at 14:**
 
@@ -157,8 +157,8 @@ stellar contract invoke --id CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGO
   settle --auth_id <auth-id-2> --final_amount 140000000
 ```
 
-- reserve 10 USDC → [`217ddc69…`](https://stellar.expert/explorer/testnet/tx/217ddc69777c140b78b1710fe391c08a642b208abf09eb29e438c82f973ed349) — event `collateral_locked`
-- settle 14 USDC → [`bb6f3ac3…`](https://stellar.expert/explorer/testnet/tx/bb6f3ac3fb4e7ad32ea20f7b55ef2139d41542755f4fdf3688ce7f44ea7eb803) — events `card_settle` **and** `shortfall`, returns `40000000`
+- reserve 10 USDC → [`0a50a941…`](https://stellar.expert/explorer/testnet/tx/0a50a941f9f2dac0d4b09df5398bd89b345242f1030d3f0e66a3e3f3013b984f) — event `collateral_locked`
+- settle 14 USDC → [`17425f22…`](https://stellar.expert/explorer/testnet/tx/17425f2273c7c8e409d14f3e289c308e1b137cdd8ff94032c74e29f468f3e0f0) — events `card_settle` **and** `shortfall`, returns `40000000`
 - **observable effect:** clearing exceeded locked collateral by **4 USDC** (`40000000`);
   the `shortfall` event is emitted as the off-chain top-up reconciliation signal.
 
@@ -168,10 +168,10 @@ stellar contract invoke --id CAVFABBNRNU6CRAYNIH2OZSZBDKGXRUYVIUGNZKVKAUYK6P3GGO
 
 | Primitive | Key operation | Tx | Event |
 | --- | --- | --- | --- |
-| Partner attribution | `settle_split` (100 USDC split 30/20) | [`d03dec96…`](https://stellar.expert/explorer/testnet/tx/d03dec96b07bdf664ea4136ea72a043838825a00e3691e90ce5cd01c21cfafd6) | `partner_transfer` ×2 |
-| FX rate-lock | `consume_quote` | [`cd510591…`](https://stellar.expert/explorer/testnet/tx/cd5105914d7b813007a1fbdb9609fe8b8623b9e7a76059ed227ac967e6c769c4) | `quote_use` |
-| Card-collateral | `settle` (covered) | [`69435816…`](https://stellar.expert/explorer/testnet/tx/694358160e3e1c259ff5c3b0057ed428518025b45765f2fdf013e46081c99f89) | `card_settle` |
-| Card-collateral | `settle` (shortfall) | [`bb6f3ac3…`](https://stellar.expert/explorer/testnet/tx/bb6f3ac3fb4e7ad32ea20f7b55ef2139d41542755f4fdf3688ce7f44ea7eb803) | `shortfall` |
+| Partner attribution | `settle_split` (100 USDC split 30/20) | [`c8b95270…`](https://stellar.expert/explorer/testnet/tx/c8b95270f602384a79254723a6a23879120012ce49d7bb16c3b3d2f9f7f0978c) | `partner_transfer` ×2 |
+| FX rate-lock | `consume_quote` | [`73bef0ce…`](https://stellar.expert/explorer/testnet/tx/73bef0ce69c797d0e6334b62572e06dd8338ea2708f109ca435c2db80c8a8150) | `quote_use` |
+| Card-collateral | `settle` (covered) | [`49f506c9…`](https://stellar.expert/explorer/testnet/tx/49f506c9a9a322e8672e667b75ebdfe34312a14ba34263e9c5fd84e1b02d4389) | `card_settle` |
+| Card-collateral | `settle` (shortfall) | [`17425f22…`](https://stellar.expert/explorer/testnet/tx/17425f2273c7c8e409d14f3e289c308e1b137cdd8ff94032c74e29f468f3e0f0) | `shortfall` |
 
 ---
 
@@ -206,5 +206,6 @@ The old contract ids keep resolving on stellar.expert but can no longer be
 administered.
 
 This page reflects exactly such a rotation: the 2026-05-30 deployment was
-orphaned when the local deployer identity was lost, redeployed on 2026-06-05,
-and the demo re-captured on 2026-06-08 (see `CHANGELOG.md`).
+orphaned when the local deployer identity was lost and redeployed on 2026-06-05;
+the run documented above was captured against that deployment on 2026-06-12
+(see `CHANGELOG.md`).

@@ -8,9 +8,9 @@
 
 **SCF reviewers:** start with **[`docs/REVIEWERS.md`](docs/REVIEWERS.md)** — verify the deployed contracts, the on-chain demo, the live-reading SDK, and the Anchor Platform in ~60 seconds.
 
-![Bleu SDK reading live partner-attribution state straight off Stellar testnet](docs/media/sdk-live-testnet.gif)
+![just demo opening: real USDC split 30/20 on-chain via settle_split](docs/media/demo-testnet.gif)
 
-> The SDK above is reading **real on-chain state** from the deployed `partner-attribution` contract on testnet (`just sdk-example`). Nothing mocked.
+> `just demo` opening: real USDC split 30/20 on-chain via `settle_split` — the full 12-step run (FX rate-lock, card collateral) is in [docs/DEMO.md](docs/DEMO.md). Recorded against the canonical deployment; every hash the docs link comes from this run.
 
 ## What this is
 
