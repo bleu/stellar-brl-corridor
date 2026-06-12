@@ -8,7 +8,7 @@
  *   just sdk-example         # from the repo root
  *
  * Expected (set by the demo run in docs/DEMO.md):
- *   partner-attribution admin      = GDWNOIAEKIWIKL6BSOHNJYJNYAZTVPXAG47G3XZA2ZFPC66Q5LCLABYF
+ *   partner-attribution admin      = GAQH34BVB4SEEI4DNKIJQI6BTCNFJVO7AWC4SGQHV23UVRNLIZEL7NLI
  *   partner-attribution total_bps  = 5000   (two partners summing to 50%)
  *   partner-attribution sac_address= the USDC SAC
  */

@@ -33,7 +33,7 @@ const { result: totalBps } = await partnerAttribution.total_bps();
 const { result: sac } = await partnerAttribution.sac_address();
 
 console.log({ admin, totalBps, sac });
-// { admin: 'GDWNOIAE…ABYF', totalBps: 5000, sac: 'CBCIMM65…OH37' }
+// { admin: 'GAQH34BV…7NLI', totalBps: 5000, sac: 'CBQAJM5A…DO7D' }
 ```
 
 Run the full example (prints live values to the console):
