@@ -65,9 +65,17 @@ invoke() {
   # is printed once per submission — never to a bare 64-hex that could be a
   # contract id or some other identifier scrolling by first. Fall back to the
   # "Transaction hash is <hash>" line for CLI builds that print that instead.
+  # Tolerate a non-zero exit here (set -e would abort before the error output
+  # below ever prints); surface stderr first, then fail with context.
+  local rc=0
   out="$(stellar contract invoke --id "$cid" --source "$SOURCE" --network "$NETWORK" \
-          --send=yes -- "$fn" "$@" 2>"$errfile")"
+          --send=yes -- "$fn" "$@" 2>"$errfile")" || rc=$?
   cat "$errfile" >&2
+  if [ "$rc" -ne 0 ]; then
+    echo "  !! $step/$fn failed (stellar exit $rc)" >&2
+    rm -f "$errfile"
+    exit 1
+  fi
   hash="$(grep -Eo '/tx/[0-9a-f]{64}' "$errfile" | grep -Eo '[0-9a-f]{64}' | tail -1)"
   if [ -z "$hash" ]; then
     hash="$(grep -Eo 'Transaction hash is [0-9a-f]{64}' "$errfile" \
